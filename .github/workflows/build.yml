@@ -1,0 +1,47 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - name: Set up JDK
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: 21
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          cache: gradle
+
+      - name: Configure Git
+        run: git config --global user.email "action@github.com" && git config --global user.name "Github Action"
+
+      - name: Apply patches
+        run: ./gradlew -Dorg.gradle.jvmargs="-Dgraal.CompilerConfiguration=enterprise -Dgraal.UsePriorityInlining=true -Dgraal.Vectorization=true -Dgraal.OptDuplication=true --add-modules jdk.incubator.vector" applyPatches --stacktrace --no-daemon
+
+      - name: Create MojmapPaperclipJar
+        run: ./gradlew -Dorg.gradle.jvmargs="-Dgraal.CompilerConfiguration=enterprise -Dgraal.UsePriorityInlining=true -Dgraal.Vectorization=true -Dgraal.OptDuplication=true --add-modules jdk.incubator.vector" createMojmapPaperclipJar --stacktrace --no-daemon
+
+      - name: Rename Paperclip Jar
+        run: |
+          mv build/libs/tentacles-paperclip-1.21.1-R0.1-SNAPSHOT-mojmap.jar ./tentacles-1.21.1.jar
+
+      - name: Upload Tentacles
+        uses: actions/upload-artifact@v3
+        with:
+          name: Tentacles 1.21.1
+          path: ./tentacles-1.21.1.jar
+
+      # TODO: marvinpinto/action-automatic-releases is archived, need to find new one
+      # Notes: create releases every time, similar changelogs with this, all commits for changelogs
+      - name: Release Tentacles
+        if: github.event_name != 'pull_request'
+        uses: marvinpinto/action-automatic-releases@master
+        with:
+          title: "Tentacles 1.21.1"
+          automatic_release_tag: "ver-1.21.1"
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          files: "./tentacles-1.21.1.jar"
+          prerelease: false
