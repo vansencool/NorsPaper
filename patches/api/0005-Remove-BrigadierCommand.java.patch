@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Wed, 22 Jan 2025 01:02:52 +0530
+Subject: [PATCH] Remove BrigadierCommand.java
+
+
+diff --git a/src/main/java/net/vansen/norspaper/commands/BrigadierCommand.java b/src/main/java/net/vansen/norspaper/commands/BrigadierCommand.java
+deleted file mode 100644
+index 1087c8a6b339c217f8498bc4acf9af47f70835c3..0000000000000000000000000000000000000000
+--- a/src/main/java/net/vansen/norspaper/commands/BrigadierCommand.java
++++ /dev/null
+@@ -1,13 +0,0 @@
+-package net.vansen.norspaper.commands;
+-
+-import com.mojang.brigadier.tree.LiteralCommandNode;
+-import io.papermc.paper.command.brigadier.CommandSourceStack;
+-import org.jetbrains.annotations.NotNull;
+-
+-// TODO
+-public class BrigadierCommand {
+-
+-    private void register(@NotNull LiteralCommandNode<CommandSourceStack> node) {
+-        
+-    }
+-}

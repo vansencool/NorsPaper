@@ -1,0 +1,12 @@
+name: NorsPaper-Test-Plugin
+version: ${version}
+main: net.vansen.testplugin.TestPlugin
+description: NorsPaper Test Plugin
+author: Vansen
+api-version: ${apiversion}
+load: STARTUP
+#bootstrapper: net.vansen.testplugin.TestPluginBootstrap
+#loader: net.vansen.testplugin.TestPluginLoader
+defaultPerm: FALSE
+permissions:
+dependencies:

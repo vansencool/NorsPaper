@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Tue, 21 Jan 2025 23:29:22 +0530
+Subject: [PATCH] Things done so far
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index ab4cc552828a6fc2845c8e759836fa5a6dcca189..5e2d0b865500b93c349f95dc48ee3be2b89faf39 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -1,4 +1,5 @@
+-import io.papermc.paperweight.util.*
++import io.papermc.paperweight.util.Git
++import io.papermc.paperweight.util.path
+ import java.time.Instant
+ 
+ plugins {
+@@ -123,14 +124,14 @@ tasks.jar {
+         val gitBranch = git("rev-parse", "--abbrev-ref", "HEAD").getText().trim() // Paper
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
+-            "Implementation-Title" to "Leaf", // Gale - branding changes // Leaf
++            "Implementation-Title" to "NorsPaper", // Gale - branding changes // Leaf // NorsPaper
+             "Implementation-Version" to implementationVersion,
+             "Implementation-Vendor" to date, // Paper
+-            "Specification-Title" to "Leaf", // Gale - branding changes // Leaf
++            "Specification-Title" to "NorsPaper", // Gale - branding changes // Leaf // NorsPaper
+             "Specification-Version" to project.version,
+-            "Specification-Vendor" to "Winds Studio", // Gale - branding changes // Leaf
+-            "Brand-Id" to "winds-studio:leaf", // Gale - branding changes // Leaf
+-            "Brand-Name" to "Leaf", // Gale - branding changes // Leaf
++            "Specification-Vendor" to "Nors Studio", // Gale - branding changes // Leaf // NorsPaper
++            "Brand-Id" to "nors-studio:norspaper", // Gale - branding changes // Leaf // NorsPaper
++            "Brand-Name" to "NorsPaper", // Gale - branding changes // Leaf // NorsPaper
+             "Build-Number" to (build ?: ""),
+             "Build-Time" to Instant.now().toString(),
+             "Git-Branch" to gitBranch, // Paper
+@@ -254,22 +255,30 @@ tasks.registerRunTask("runDevServer") {
+ 
+ tasks.registerRunTask("runBundler") {
+     description = "Spin up a test server from the Mojang mapped bundler jar"
+-    classpath(rootProject.tasks.named<io.papermc.paperweight.tasks.CreateBundlerJar>("createMojmapBundlerJar").flatMap { it.outputZip })
++    classpath(
++        rootProject.tasks.named<io.papermc.paperweight.tasks.CreateBundlerJar>("createMojmapBundlerJar")
++            .flatMap { it.outputZip })
+     mainClass.set(null as String?)
+ }
+ tasks.registerRunTask("runReobfBundler") {
+     description = "Spin up a test server from the reobf bundler jar"
+-    classpath(rootProject.tasks.named<io.papermc.paperweight.tasks.CreateBundlerJar>("createReobfBundlerJar").flatMap { it.outputZip })
++    classpath(
++        rootProject.tasks.named<io.papermc.paperweight.tasks.CreateBundlerJar>("createReobfBundlerJar")
++            .flatMap { it.outputZip })
+     mainClass.set(null as String?)
+ }
+ tasks.registerRunTask("runPaperclip") {
+     description = "Spin up a test server from the Mojang mapped Paperclip jar"
+-    classpath(rootProject.tasks.named<io.papermc.paperweight.tasks.CreatePaperclipJar>("createMojmapPaperclipJar").flatMap { it.outputZip })
++    classpath(
++        rootProject.tasks.named<io.papermc.paperweight.tasks.CreatePaperclipJar>("createMojmapPaperclipJar")
++            .flatMap { it.outputZip })
+     mainClass.set(null as String?)
+ }
+ tasks.registerRunTask("runReobfPaperclip") {
+     description = "Spin up a test server from the reobf Paperclip jar"
+-    classpath(rootProject.tasks.named<io.papermc.paperweight.tasks.CreatePaperclipJar>("createReobfPaperclipJar").flatMap { it.outputZip })
++    classpath(
++        rootProject.tasks.named<io.papermc.paperweight.tasks.CreatePaperclipJar>("createReobfPaperclipJar")
++            .flatMap { it.outputZip })
+     mainClass.set(null as String?)
+ }
+ 
