@@ -5,7 +5,7 @@ Subject: [PATCH] Rebrand
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 08df07a2974ebd91106ebfe5d70adcd71f4f2802..977f0439e93e094f95a3f87da7b8aaee4949a50f 100644
+index 08df07a2974ebd91106ebfe5d70adcd71f4f2802..ab4cc552828a6fc2845c8e759836fa5a6dcca189 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -13,7 +13,7 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
@@ -13,7 +13,7 @@ index 08df07a2974ebd91106ebfe5d70adcd71f4f2802..977f0439e93e094f95a3f87da7b8aaee
  
  dependencies {
 -    implementation(project(":leaf-api")) // Gale start - project setup - Depend on own API // Leaf
-+    implementation(project(":tentacles-api")) // Gale start - project setup - Depend on own API // Leaf // Tentacles
++    implementation(project(":norspaper-api")) // Gale start - project setup - Depend on own API // Leaf // Tentacles // NorsPaper
  
      // Leaf start - Leaf Config
      implementation("com.github.thatsmusic99:ConfigurationMaster-API:v2.0.0-rc.2") {

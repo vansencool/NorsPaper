@@ -1,6 +1,3 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
-
 plugins {
     java
     `maven-publish`
@@ -55,7 +52,7 @@ dependencies {
 }
 
 paperweight {
-    serverProject = project(":tentacles-server")
+    serverProject = project(":norspaper-server")
 
     remapRepo = paperMavenPublicUrl
     decompileRepo = paperMavenPublicUrl
@@ -68,10 +65,10 @@ paperweight {
             baseName("Leaf")
 
             apiPatchDir = layout.projectDirectory.dir("patches/api")
-            apiOutputDir = layout.projectDirectory.dir("Tentacles-API")
+            apiOutputDir = layout.projectDirectory.dir("NorsPaper-API")
 
             serverPatchDir = layout.projectDirectory.dir("patches/server")
-            serverOutputDir = layout.projectDirectory.dir("Tentacles-Server")
+            serverOutputDir = layout.projectDirectory.dir("NorsPaper-Server")
         }
 
         patchTasks.register("generatedApi") {

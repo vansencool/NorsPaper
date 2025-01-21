@@ -1,2 +1,3 @@
-## Tentacles
-Template to create a mantainable fork of [Leaf](https://github.com/Winds-Studio/Leaf).
+## NorsPaper
+
+An fork meant for performance improvements, much better API for developers, and more!

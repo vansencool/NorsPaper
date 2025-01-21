@@ -1,0 +1,819 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Tue, 21 Jan 2025 23:26:53 +0530
+Subject: [PATCH] Rebrand-2
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
+index 9869bec65f4d0fbd5ed5aff896a8956e7ea2747f..40492ed0a3adfafe14e2645ccd71f3236e6938c6 100644
+--- a/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
++++ b/src/main/java/com/destroystokyo/paper/console/PaperConsole.java
+@@ -20,7 +20,7 @@ public final class PaperConsole extends SimpleTerminalConsole {
+     @Override
+     protected LineReader buildReader(LineReaderBuilder builder) {
+         builder
+-                .appName("Leaf") // Gale - branding changes // Leaf
++                .appName("NorsPaper") // Gale - branding changes // Leaf // NorsPaper
+                 .variable(LineReader.HISTORY_FILE, java.nio.file.Paths.get(".console_history"))
+                 .completer(new ConsoleCommandCompleter(this.server))
+                 .option(LineReader.Option.COMPLETE_IN_WORD, true);
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index 34f7f74b374d319d0d578e498db7663dd58b8458..13d6cd2e4062db77cc17c7c1f9facb4777c0a0db 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -2,26 +2,27 @@ package io.papermc.paper;
+ 
+ import com.google.common.base.Strings;
+ import io.papermc.paper.util.JarManifests;
+-import java.time.Instant;
+-import java.time.temporal.ChronoUnit;
+-import java.util.Optional;
+-import java.util.OptionalInt;
+-import java.util.jar.Manifest;
+ import net.kyori.adventure.key.Key;
+ import net.minecraft.SharedConstants;
+ import org.bukkit.craftbukkit.CraftServer;
+ import org.bukkit.craftbukkit.Main;
+ import org.jetbrains.annotations.NotNull;
+ 
++import java.time.Instant;
++import java.time.temporal.ChronoUnit;
++import java.util.Optional;
++import java.util.OptionalInt;
++import java.util.jar.Manifest;
++
+ public record ServerBuildInfoImpl(
+-    Key brandId,
+-    String brandName,
+-    String minecraftVersionId,
+-    String minecraftVersionName,
+-    OptionalInt buildNumber,
+-    Instant buildTime,
+-    Optional<String> gitBranch,
+-    Optional<String> gitCommit
++        Key brandId,
++        String brandName,
++        String minecraftVersionId,
++        String minecraftVersionName,
++        OptionalInt buildNumber,
++        Instant buildTime,
++        Optional<String> gitBranch,
++        Optional<String> gitCommit
+ ) implements ServerBuildInfo {
+     private static final String ATTRIBUTE_BRAND_ID = "Brand-Id";
+     private static final String ATTRIBUTE_BRAND_NAME = "Brand-Name";
+@@ -35,6 +36,7 @@ public record ServerBuildInfoImpl(
+     private static final String BRAND_PUFFERFISH_NAME = "Pufferfish"; // Leaf
+     private static final String BRAND_PURPUR_NAME = "Purpur"; // Purpur
+     private static final String BRAND_LEAF_NAME = "Leaf"; // Leaf
++    private static final String BRAND_NORSPAPER = "NorsPaper";
+ 
+     private static final String BUILD_DEV = "DEV";
+ 
+@@ -44,22 +46,22 @@ public record ServerBuildInfoImpl(
+ 
+     private ServerBuildInfoImpl(final Manifest manifest) {
+         this(
+-            getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
+-                .map(Key::key)
+-                .orElse(BRAND_LEAF_ID), // Gale - branding changes // Leaf
+-            getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
+-                .orElse(BRAND_LEAF_NAME), // Gale - branding changes // Leaf
+-            SharedConstants.getCurrentVersion().getId(),
+-            SharedConstants.getCurrentVersion().getName(),
+-            getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
+-                .map(Integer::parseInt)
+-                .map(OptionalInt::of)
+-                .orElse(OptionalInt.empty()),
+-            getManifestAttribute(manifest, ATTRIBUTE_BUILD_TIME)
+-                .map(Instant::parse)
+-                .orElse(Main.BOOT_TIME),
+-            getManifestAttribute(manifest, ATTRIBUTE_GIT_BRANCH),
+-            getManifestAttribute(manifest, ATTRIBUTE_GIT_COMMIT)
++                getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
++                        .map(Key::key)
++                        .orElse(BRAND_NORSPAPER_ID), // Gale - branding changes // Leaf
++                getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
++                        .orElse(BRAND_NORSPAPER), // Gale - branding changes // Leaf
++                SharedConstants.getCurrentVersion().getId(),
++                SharedConstants.getCurrentVersion().getName(),
++                getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
++                        .map(Integer::parseInt)
++                        .map(OptionalInt::of)
++                        .orElse(OptionalInt.empty()),
++                getManifestAttribute(manifest, ATTRIBUTE_BUILD_TIME)
++                        .map(Instant::parse)
++                        .orElse(Main.BOOT_TIME),
++                getManifestAttribute(manifest, ATTRIBUTE_GIT_BRANCH),
++                getManifestAttribute(manifest, ATTRIBUTE_GIT_COMMIT)
+         );
+     }
+ 
+@@ -69,7 +71,8 @@ public record ServerBuildInfoImpl(
+                 || brandId.equals(BRAND_PAPER_ID)
+                 || brandId.equals(BRAND_GALE_ID) // Gale - branding changes // Leaf
+                 || brandId.equals(BRAND_PUFFERFISH_ID) // Leaf
+-                || brandId.equals(BRAND_PURPUR_ID); // Leaf
++                || brandId.equals(BRAND_PURPUR_ID) // Leaf
++                || brandId.equals(BRAND_LEAF_ID); // NorsPaper
+     }
+ 
+     @Override
+diff --git a/src/main/java/net/minecraft/CrashReport.java b/src/main/java/net/minecraft/CrashReport.java
+index aa25fd3ee043003f359b2c67a6d0f6700a0ef893..fe346986074aca752c074ad86241e13b586ca773 100644
+--- a/src/main/java/net/minecraft/CrashReport.java
++++ b/src/main/java/net/minecraft/CrashReport.java
+@@ -2,6 +2,11 @@ package net.minecraft;
+ 
+ import com.google.common.collect.Lists;
+ import com.mojang.logging.LogUtils;
++import org.apache.commons.io.IOUtils;
++import org.apache.commons.lang3.ArrayUtils;
++import org.slf4j.Logger;
++
++import javax.annotation.Nullable;
+ import java.io.BufferedWriter;
+ import java.io.PrintWriter;
+ import java.io.StringWriter;
+@@ -14,11 +19,6 @@ import java.util.Iterator;
+ import java.util.List;
+ import java.util.Locale;
+ import java.util.concurrent.CompletionException;
+-import javax.annotation.Nullable;
+-import net.minecraft.util.MemoryReserve;
+-import org.apache.commons.io.IOUtils;
+-import org.apache.commons.lang3.ArrayUtils;
+-import org.slf4j.Logger;
+ 
+ public class CrashReport {
+ 
+@@ -32,7 +32,7 @@ public class CrashReport {
+     private boolean trackingStackTrace = true;
+     private StackTraceElement[] uncategorizedStackTrace = new StackTraceElement[0];
+     private final SystemReport systemReport = new SystemReport();
+-    private List<String> extraInfo = List.of("", "DO NOT REPORT THIS TO PAPER OR GALE! REPORT TO LEAF INSTEAD!", ""); // Leaf - Purpur
++    private List<String> extraInfo = List.of("", "DO NOT REPORT THIS TO LEAF! REPORT TO NORSPAPER INSTEAD!", ""); // Leaf - Purpur // NorsPaper
+ 
+     public CrashReport(String message, Throwable cause) {
+         io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateThrowable(cause); // Paper
+diff --git a/src/main/java/net/vansen/norspaper/version/NorsPaperVersionFetcher.java b/src/main/java/net/vansen/norspaper/version/NorsPaperVersionFetcher.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..3af25104250b98ffa527ecf7c68005d94d04fdb3
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/version/NorsPaperVersionFetcher.java
+@@ -0,0 +1,17 @@
++package net.vansen.norspaper.version;
++
++import org.galemc.gale.version.AbstractPaperVersionFetcher;
++
++public class NorsPaperVersionFetcher extends AbstractPaperVersionFetcher {
++
++    public NorsPaperVersionFetcher() {
++        super(
++                "ver/1.21.1",
++                "https://github.com/vansen/NorsPaper",
++                "Nors-Studio",
++                "NorsPaper",
++                "Nors-Studio",
++                "NorsPaper"
++        );
++    }
++}
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index e1ff5511d4694c13249443da0f127456d53e5543..d4e0f46c60f0e23658ebed600805c9f673fa8356 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -1,28 +1,23 @@
+ package org.bukkit.craftbukkit.scheduler;
+ 
+ import com.google.common.base.Preconditions;
+-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+-import java.util.ArrayList;
+-import java.util.Comparator;
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.PriorityQueue;
++import org.bukkit.plugin.IllegalPluginAccessException;
++import org.bukkit.plugin.Plugin;
++import org.bukkit.scheduler.BukkitRunnable;
++import org.bukkit.scheduler.BukkitScheduler;
++import org.bukkit.scheduler.BukkitTask;
++import org.bukkit.scheduler.BukkitWorker;
++
++import java.util.*;
+ import java.util.concurrent.Callable;
+ import java.util.concurrent.ConcurrentHashMap;
+ import java.util.concurrent.Executor;
+-import java.util.concurrent.Executors;
+ import java.util.concurrent.Future;
+ import java.util.concurrent.atomic.AtomicInteger;
+ import java.util.concurrent.atomic.AtomicReference;
+ import java.util.function.Consumer;
+ import java.util.function.IntUnaryOperator;
+ import java.util.logging.Level;
+-import org.bukkit.plugin.IllegalPluginAccessException;
+-import org.bukkit.plugin.Plugin;
+-import org.bukkit.scheduler.BukkitRunnable;
+-import org.bukkit.scheduler.BukkitScheduler;
+-import org.bukkit.scheduler.BukkitTask;
+-import org.bukkit.scheduler.BukkitWorker;
+ 
+ /**
+  * The fundamental concepts for this implementation:
+@@ -119,6 +114,7 @@ public class CraftScheduler implements BukkitScheduler {
+     // Paper start
+     private final CraftScheduler asyncScheduler;
+     private final boolean isAsyncScheduler;
++
+     public CraftScheduler() {
+         this(false);
+     }
+@@ -131,6 +127,7 @@ public class CraftScheduler implements BukkitScheduler {
+             this.asyncScheduler = new CraftAsyncScheduler();
+         }
+     }
++
+     // Paper end
+     @Override
+     public int scheduleSyncDelayedTask(final Plugin plugin, final Runnable task) {
+@@ -281,6 +278,7 @@ public class CraftScheduler implements BukkitScheduler {
+                             this.check(CraftScheduler.this.pending);
+                         }
+                     }
++
+                     private boolean check(final Iterable<CraftTask> collection) {
+                         final Iterator<CraftTask> tasks = collection.iterator();
+                         while (tasks.hasNext()) {
+@@ -323,6 +321,7 @@ public class CraftScheduler implements BukkitScheduler {
+                         this.check(CraftScheduler.this.pending);
+                         this.check(CraftScheduler.this.temp);
+                     }
++
+                     void check(final Iterable<CraftTask> collection) {
+                         final Iterator<CraftTask> tasks = collection.iterator();
+                         while (tasks.hasNext()) {
+@@ -475,15 +474,15 @@ public class CraftScheduler implements BukkitScheduler {
+                 } catch (final Throwable throwable) {
+                     // Paper start
+                     final String logMessage = String.format(
+-                        "Task #%s for %s generated an exception",
+-                        task.getTaskId(),
+-                        task.getOwner().getDescription().getFullName());
++                            "Task #%s for %s generated an exception",
++                            task.getTaskId(),
++                            task.getOwner().getDescription().getFullName());
+                     task.getOwner().getLogger().log(
+                             Level.WARNING,
+-                        logMessage,
++                            logMessage,
+                             throwable);
+                     org.bukkit.Bukkit.getServer().getPluginManager().callEvent(
+-                        new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerSchedulerException(logMessage, throwable, task)));
++                            new com.destroystokyo.paper.event.server.ServerExceptionEvent(new com.destroystokyo.paper.exception.ServerSchedulerException(logMessage, throwable, task)));
+                     // Paper end
+                 } finally {
+                     this.currentTask = null;
+@@ -491,7 +490,7 @@ public class CraftScheduler implements BukkitScheduler {
+                 this.parsePending();
+             } else {
+                 // this.debugTail = this.debugTail.setNext(new CraftAsyncDebugger(currentTick + CraftScheduler.RECENT_TICKS, task.getOwner(), task.getTaskClass())); // Paper
+-                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to Leaf"); // Paper // Gale - branding changes // Leaf
++                task.getOwner().getLogger().log(Level.SEVERE, "Unexpected Async Task in the Sync Scheduler. Report this to NorsPaper"); // Paper // Gale - branding changes // Leaf // NorsPaper
+                 // We don't need to parse pending
+                 // (async tasks must live with race-conditions if they attempt to cancel between these few lines of code)
+             }
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+index 7d53a86c5aa5a1eeeb26dbc56e5f104729806d20..99c1b3e07997470135eddd7e80f79087383a3b22 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/CraftMagicNumbers.java
+@@ -10,13 +10,6 @@ import com.mojang.brigadier.StringReader;
+ import com.mojang.brigadier.exceptions.CommandSyntaxException;
+ import com.mojang.serialization.Dynamic;
+ import com.mojang.serialization.JsonOps;
+-import java.io.File;
+-import java.io.IOException;
+-import java.util.HashMap;
+-import java.util.Locale;
+-import java.util.Map;
+-import java.util.logging.Level;
+-import java.util.logging.Logger;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.advancements.AdvancementHolder;
+ import net.minecraft.commands.Commands;
+@@ -36,18 +29,12 @@ import net.minecraft.world.item.alchemy.Potion;
+ import net.minecraft.world.level.block.Block;
+ import net.minecraft.world.level.block.state.BlockState;
+ import net.minecraft.world.level.storage.LevelResource;
+-import org.bukkit.Bukkit;
+-import org.bukkit.FeatureFlag;
+-import org.bukkit.Keyed;
+-import org.bukkit.Material;
+-import org.bukkit.NamespacedKey;
+-import org.bukkit.Registry;
+-import org.bukkit.UnsafeValues;
++import net.vansen.norspaper.version.NorsPaperVersionFetcher;
++import org.bukkit.*;
+ import org.bukkit.advancement.Advancement;
+ import org.bukkit.attribute.Attribute;
+ import org.bukkit.attribute.AttributeModifier;
+ import org.bukkit.block.data.BlockData;
+-// import org.bukkit.craftbukkit.CraftFeatureFlag; // Paper
+ import org.bukkit.craftbukkit.CraftRegistry;
+ import org.bukkit.craftbukkit.CraftServer;
+ import org.bukkit.craftbukkit.attribute.CraftAttribute;
+@@ -71,6 +58,13 @@ import org.bukkit.plugin.InvalidPluginException;
+ import org.bukkit.plugin.PluginDescriptionFile;
+ import org.bukkit.potion.PotionType;
+ 
++import java.io.File;
++import java.io.IOException;
++import java.util.HashMap;
++import java.util.Locale;
++import java.util.Map;
++import java.util.logging.Level;
++
+ @SuppressWarnings("deprecation")
+ public final class CraftMagicNumbers implements UnsafeValues {
+     public static final CraftMagicNumbers INSTANCE = new CraftMagicNumbers();
+@@ -78,7 +72,8 @@ public final class CraftMagicNumbers implements UnsafeValues {
+ 
+     private final Commodore commodore = new Commodore();
+ 
+-    private CraftMagicNumbers() {}
++    private CraftMagicNumbers() {
++    }
+ 
+     // Paper start
+     @Override
+@@ -198,10 +193,12 @@ public final class CraftMagicNumbers implements UnsafeValues {
+     public static ResourceLocation key(Material mat) {
+         return CraftNamespacedKey.toMinecraft(mat.getKey());
+     }
++
+     // ========================================================================
+     // Paper start
+     @Override
+-    public void reportTimings() {} // Leaf - Remove Timings
++    public void reportTimings() {
++    } // Leaf - Remove Timings
+     // Paper end
+ 
+     public static byte toLegacyData(BlockState data) {
+@@ -259,11 +256,11 @@ public final class CraftMagicNumbers implements UnsafeValues {
+ 
+     /**
+      * This string should be changed if the NMS mappings do.
+-     *
++     * <p>
+      * It has no meaning and should only be used as an equality check. Plugins
+      * which are sensitive to the NMS mappings may read it and refuse to load if
+      * it cannot be found or is different to the expected value.
+-     *
++     * <p>
+      * Remember: NMS is not supported API and may break at any time for any
+      * reason irrespective of this. There is often supported API to do the same
+      * thing as many common NMS usages. If not, you are encouraged to open a
+@@ -443,6 +440,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
+         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+         return nmsItemStack.getItem().getDescriptionId(nmsItemStack);
+     }
++
+     // Paper start
+     @Override
+     public boolean isSupportedApiVersion(String apiVersion) {
+@@ -479,6 +477,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
+     public DamageSource.Builder createDamageSourceBuilder(DamageType damageType) {
+         return new CraftDamageSourceBuilder(damageType);
+     }
++
+     // Paper start
+     @Override
+     public String getTimingsServerName() {
+@@ -487,7 +486,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
+ 
+     @Override
+     public com.destroystokyo.paper.util.VersionFetcher getVersionFetcher() {
+-        return new org.dreeam.leaf.version.LeafVersionFetcher(); // Gale - branding changes - version fetcher // Leaf
++        return new NorsPaperVersionFetcher(); // Gale - branding changes - version fetcher // Leaf // NorsPaper
+     }
+ 
+     @Override
+@@ -535,8 +534,8 @@ public final class CraftMagicNumbers implements UnsafeValues {
+         final int dataVersion = data.get("DataVersion").getAsInt();
+         final int currentVersion = org.bukkit.craftbukkit.util.CraftMagicNumbers.INSTANCE.getDataVersion();
+         data = ca.spottedleaf.dataconverter.minecraft.MCDataConverter.convertJson(
+-            ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry.ITEM_STACK,
+-            data, false, dataVersion, currentVersion
++                ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry.ITEM_STACK,
++                data, false, dataVersion, currentVersion
+         );
+         com.mojang.serialization.DynamicOps<com.google.gson.JsonElement> ops = MinecraftServer.getServer().registryAccess().createSerializationContext(com.mojang.serialization.JsonOps.INSTANCE);
+         return CraftItemStack.asCraftMirror(net.minecraft.world.item.ItemStack.CODEC.parse(ops, data).getOrThrow(IllegalArgumentException::new));
+@@ -565,7 +564,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
+             compound.remove("UUID");
+         }
+         return net.minecraft.world.entity.EntityType.create(compound, ((org.bukkit.craftbukkit.CraftWorld) world).getHandle())
+-            .orElseThrow(() -> new IllegalArgumentException("An ID was not found for the data. Did you downgrade?")).getBukkitEntity();
++                .orElseThrow(() -> new IllegalArgumentException("An ID was not found for the data. Did you downgrade?")).getBukkitEntity();
+     }
+ 
+     private byte[] serializeNbtToBytes(net.minecraft.nbt.CompoundTag compound) {
+@@ -573,8 +572,8 @@ public final class CraftMagicNumbers implements UnsafeValues {
+         java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+         try {
+             net.minecraft.nbt.NbtIo.writeCompressed(
+-                compound,
+-                outputStream
++                    compound,
++                    outputStream
+             );
+         } catch (IOException ex) {
+             throw new RuntimeException(ex);
+@@ -586,7 +585,7 @@ public final class CraftMagicNumbers implements UnsafeValues {
+         net.minecraft.nbt.CompoundTag compound;
+         try {
+             compound = net.minecraft.nbt.NbtIo.readCompressed(
+-                new java.io.ByteArrayInputStream(data), net.minecraft.nbt.NbtAccounter.unlimitedHeap()
++                    new java.io.ByteArrayInputStream(data), net.minecraft.nbt.NbtAccounter.unlimitedHeap()
+             );
+         } catch (IOException ex) {
+             throw new RuntimeException(ex);
+@@ -650,7 +649,8 @@ public final class CraftMagicNumbers implements UnsafeValues {
+     // Paper start - fix custom stats criteria creation
+     @Override
+     public String getStatisticCriteriaKey(org.bukkit.Statistic statistic) {
+-        if (statistic.getType() != org.bukkit.Statistic.Type.UNTYPED) return "minecraft.custom:minecraft." + statistic.getKey().getKey();
++        if (statistic.getType() != org.bukkit.Statistic.Type.UNTYPED)
++            return "minecraft.custom:minecraft." + statistic.getKey().getKey();
+         return org.bukkit.craftbukkit.CraftStatistic.getNMSStatistic(statistic).getName();
+     }
+     // Paper end - fix custom stats criteria creation
+@@ -664,8 +664,8 @@ public final class CraftMagicNumbers implements UnsafeValues {
+             flag = flag.asCreative();
+         }
+         final java.util.List<net.minecraft.network.chat.Component> lines = CraftItemStack.asNMSCopy(itemStack).getTooltipLines(
+-            net.minecraft.world.item.Item.TooltipContext.of(player == null ? net.minecraft.server.MinecraftServer.getServer().registryAccess() : ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle().level().registryAccess()),
+-            player == null ? null : ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle(), flag);
++                net.minecraft.world.item.Item.TooltipContext.of(player == null ? net.minecraft.server.MinecraftServer.getServer().registryAccess() : ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle().level().registryAccess()),
++                player == null ? null : ((org.bukkit.craftbukkit.entity.CraftPlayer) player).getHandle(), flag);
+         return lines.stream().map(io.papermc.paper.adventure.PaperAdventure::asAdventure).toList();
+     }
+     // Paper end - expose itemstack tooltip lines
+@@ -710,9 +710,9 @@ public final class CraftMagicNumbers implements UnsafeValues {
+         final net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<M>> nmsKey = io.papermc.paper.registry.PaperRegistries.registryToNms(tagKey.registryKey());
+         final net.minecraft.core.Registry<M> nmsRegistry = org.bukkit.craftbukkit.CraftRegistry.getMinecraftRegistry().registryOrThrow(nmsKey);
+         return nmsRegistry
+-            .getTag(io.papermc.paper.registry.PaperRegistries.toNms(tagKey))
+-            .map(named -> new io.papermc.paper.registry.set.NamedRegistryKeySetImpl<>(tagKey, named))
+-            .orElse(null);
++                .getTag(io.papermc.paper.registry.PaperRegistries.toNms(tagKey))
++                .map(named -> new io.papermc.paper.registry.set.NamedRegistryKeySetImpl<>(tagKey, named))
++                .orElse(null);
+     }
+     // Paper end - hack to get tags for non server-backed registries
+ 
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+index e220f5601f6b92b7b280ce8ebe64117d30192b0e..8654e88ff6acc2b474c96b259ffe178344cdca2c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+@@ -1,17 +1,18 @@
+ package org.bukkit.craftbukkit.util;
+ 
++import org.bukkit.Bukkit;
++
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.util.Properties;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+-import org.bukkit.Bukkit;
+ 
+ public final class Versioning {
+     public static String getBukkitVersion() {
+         String result = "Unknown-Version";
+ 
+-        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/cn.dreeam.leaf/leaf-api/pom.properties"); // Gale - branding changes // Leaf
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/net.vansen.norspaper/norspaper-api/pom.properties"); // Gale - branding changes // Leaf // NorsPaper
+         Properties properties = new Properties();
+ 
+         if (stream != null) {
+diff --git a/src/main/java/org/spigotmc/WatchdogThread.java b/src/main/java/org/spigotmc/WatchdogThread.java
+index f9351c15c8c6e2f4cbd2af0a15bdd5e1a90cb262..1fe43f0fd8b34cefbb253f08d84510ae9d0c2f4f 100644
+--- a/src/main/java/org/spigotmc/WatchdogThread.java
++++ b/src/main/java/org/spigotmc/WatchdogThread.java
+@@ -1,12 +1,13 @@
+ package org.spigotmc;
+ 
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.Bukkit;
++
+ import java.lang.management.ManagementFactory;
+ import java.lang.management.MonitorInfo;
+ import java.lang.management.ThreadInfo;
+ import java.util.logging.Level;
+ import java.util.logging.Logger;
+-import net.minecraft.server.MinecraftServer;
+-import org.bukkit.Bukkit;
+ 
+ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThread // Paper - rewrite chunk system
+ {
+@@ -73,7 +74,7 @@ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThre
+         // packet processors
+         for (net.minecraft.network.PacketListener packetListener : net.minecraft.network.protocol.PacketUtils.getCurrentPacketProcessors()) {
+             if (packetListener instanceof net.minecraft.server.network.ServerGamePacketListenerImpl) {
+-                net.minecraft.server.level.ServerPlayer player = ((net.minecraft.server.network.ServerGamePacketListenerImpl)packetListener).player;
++                net.minecraft.server.level.ServerPlayer player = ((net.minecraft.server.network.ServerGamePacketListenerImpl) packetListener).player;
+                 long totalPackets = net.minecraft.network.protocol.PacketUtils.getTotalProcessedPackets();
+                 if (player == null) {
+                     log.log(Level.SEVERE, "Handling packet for player connection or ticking player connection (null player): " + packetListener);
+@@ -94,197 +95,178 @@ public class WatchdogThread extends ca.spottedleaf.moonrise.common.util.TickThre
+     }
+     // Paper end - log detailed tick information
+ 
+-    private WatchdogThread(long timeoutTime, boolean restart)
+-    {
+-        super( "Watchdog Thread" ); // Leaf - Purpur - use a generic name
++    private WatchdogThread(long timeoutTime, boolean restart) {
++        super("Watchdog Thread"); // Leaf - Purpur - use a generic name
+         this.timeoutTime = timeoutTime;
+         this.restart = restart;
+         earlyWarningEvery = Math.min(io.papermc.paper.configuration.GlobalConfiguration.get().watchdog.earlyWarningEvery, timeoutTime); // Paper
+         earlyWarningDelay = Math.min(io.papermc.paper.configuration.GlobalConfiguration.get().watchdog.earlyWarningDelay, timeoutTime); // Paper
+     }
+ 
+-    private static long monotonicMillis()
+-    {
++    private static long monotonicMillis() {
+         return System.nanoTime() / 1000000L;
+     }
+ 
+-    public static void doStart(int timeoutTime, boolean restart)
+-    {
+-        if ( WatchdogThread.instance == null )
+-        {
++    public static void doStart(int timeoutTime, boolean restart) {
++        if (WatchdogThread.instance == null) {
+             if (timeoutTime <= 0) timeoutTime = 300; // Paper
+-            WatchdogThread.instance = new WatchdogThread( timeoutTime * 1000L, restart );
++            WatchdogThread.instance = new WatchdogThread(timeoutTime * 1000L, restart);
+             WatchdogThread.instance.start();
+-        } else
+-        {
++        } else {
+             WatchdogThread.instance.timeoutTime = timeoutTime * 1000L;
+             WatchdogThread.instance.restart = restart;
+         }
+     }
+ 
+-    public static void tick()
+-    {
++    public static void tick() {
+         WatchdogThread.instance.lastTick = WatchdogThread.monotonicMillis();
+     }
+ 
+-    public static void doStop()
+-    {
+-        if ( WatchdogThread.instance != null )
+-        {
++    public static void doStop() {
++        if (WatchdogThread.instance != null) {
+             WatchdogThread.instance.stopping = true;
+         }
+     }
+ 
+     @Override
+-    public void run()
+-    {
+-        while ( !this.stopping )
+-        {
++    public void run() {
++        while (!this.stopping) {
+             //
+             // Paper start
+             Logger log = Bukkit.getServer().getLogger();
+             long currentTime = WatchdogThread.monotonicMillis();
+             MinecraftServer server = MinecraftServer.getServer();
+-            if ( this.lastTick != 0 && this.timeoutTime > 0 && WatchdogThread.hasStarted && (!server.isRunning() || (currentTime > this.lastTick + this.earlyWarningEvery && !DISABLE_WATCHDOG) )) // Paper - add property to disable
++            if (this.lastTick != 0 && this.timeoutTime > 0 && WatchdogThread.hasStarted && (!server.isRunning() || (currentTime > this.lastTick + this.earlyWarningEvery && !DISABLE_WATCHDOG))) // Paper - add property to disable
+             {
+                 boolean isLongTimeout = currentTime > lastTick + timeoutTime || (!server.isRunning() && !server.hasStopped() && currentTime > lastTick + 1000);
+                 // Don't spam early warning dumps
+-                if ( !isLongTimeout && (earlyWarningEvery <= 0 || !hasStarted || currentTime < lastEarlyWarning + earlyWarningEvery || currentTime < lastTick + earlyWarningDelay)) continue;
+-                if ( !isLongTimeout && server.hasStopped()) continue; // Don't spam early watchdog warnings during shutdown, we'll come back to this...
++                if (!isLongTimeout && (earlyWarningEvery <= 0 || !hasStarted || currentTime < lastEarlyWarning + earlyWarningEvery || currentTime < lastTick + earlyWarningDelay))
++                    continue;
++                if (!isLongTimeout && server.hasStopped())
++                    continue; // Don't spam early watchdog warnings during shutdown, we'll come back to this...
+                 lastEarlyWarning = currentTime;
+                 if (isLongTimeout) {
+-                // Paper end
+-                log.log( Level.SEVERE, "------------------------------" );
+-                // Gale start - branding changes
++                    // Paper end
++                    log.log(Level.SEVERE, "------------------------------");
++                    // Gale start - branding changes
+                 /*
+                 We do not want people to report thread issues to Paper,
+                 but we do want people to report thread issues to Gale.
+                  */
+-                log.log( Level.SEVERE, "The server has stopped responding! This is (probably) not a Paper bug. This could be a Leaf bug." ); // Paper // Leaf
+-                // Gale end - branding changes
+-                log.log( Level.SEVERE, "If you see a plugin in the Server thread dump below, then please report it to that author" );
+-                log.log( Level.SEVERE, "\t *Especially* if it looks like HTTP or MySQL operations are occurring" );
+-                log.log( Level.SEVERE, "If you see a world save or edit, then it means you did far more than your server can handle at once" );
+-                log.log( Level.SEVERE, "\t If this is the case, consider increasing timeout-time in spigot.yml but note that this will replace the crash with LARGE lag spikes" );
+-                log.log( Level.SEVERE, "If you are unsure or think this is a Leaf bug, please report this to https://github.com/Winds-Studio/Leaf/issues - and if you think this is a Paper bug, please report this to https://github.com/PaperMC/Paper/issues" ); // Gale - branding changes // Leaf
+-                log.log( Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports" );
+-                log.log( Level.SEVERE, "Leaf version: " + Bukkit.getServer().getVersion() ); // Gale - branding changes // Leaf
+-                //
+-                if ( net.minecraft.world.level.Level.lastPhysicsProblem != null )
+-                {
+-                    log.log( Level.SEVERE, "------------------------------" );
+-                    log.log( Level.SEVERE, "During the run of the server, a physics stackoverflow was supressed" );
+-                    log.log( Level.SEVERE, "near " + net.minecraft.world.level.Level.lastPhysicsProblem );
+-                }
+-                //
+-                // Paper start - Warn in watchdog if an excessive velocity was ever set
+-                if (org.bukkit.craftbukkit.CraftServer.excessiveVelEx != null) {
+-                    log.log(Level.SEVERE, "------------------------------");
+-                    log.log(Level.SEVERE, "During the run of the server, a plugin set an excessive velocity on an entity");
+-                    log.log(Level.SEVERE, "This may be the cause of the issue, or it may be entirely unrelated");
+-                    log.log(Level.SEVERE, org.bukkit.craftbukkit.CraftServer.excessiveVelEx.getMessage());
+-                    for (StackTraceElement stack : org.bukkit.craftbukkit.CraftServer.excessiveVelEx.getStackTrace()) {
+-                        log.log( Level.SEVERE, "\t\t" + stack );
++                    log.log(Level.SEVERE, "The server has stopped responding! This is (probably) not a NorsPaper bug. This could be a Leaf bug."); // Paper // Leaf // NorsPaper
++                    // Gale end - branding changes
++                    log.log(Level.SEVERE, "If you see a plugin in the Server thread dump below, then please report it to that author");
++                    log.log(Level.SEVERE, "\t *Especially* if it looks like HTTP or MySQL operations are occurring");
++                    log.log(Level.SEVERE, "If you see a world save or edit, then it means you did far more than your server can handle at once");
++                    log.log(Level.SEVERE, "\t If this is the case, consider increasing timeout-time in spigot.yml but note that this will replace the crash with LARGE lag spikes");
++                    log.log(Level.SEVERE, "Please report this to https://github.com/vansencool/NorsPaper/issues"); // Gale - branding changes // Leaf // NorsPaper
++                    log.log(Level.SEVERE, "Be sure to include ALL relevant console errors and Minecraft crash reports");
++                    log.log(Level.SEVERE, "NorsPaper version: " + Bukkit.getServer().getVersion()); // Gale - branding changes // Leaf // NorsPaper
++                    //
++                    if (net.minecraft.world.level.Level.lastPhysicsProblem != null) {
++                        log.log(Level.SEVERE, "------------------------------");
++                        log.log(Level.SEVERE, "During the run of the server, a physics stackoverflow was supressed");
++                        log.log(Level.SEVERE, "near " + net.minecraft.world.level.Level.lastPhysicsProblem);
+                     }
+-                }
+-                // Paper end
+-                } else
+-                {
++                    //
++                    // Paper start - Warn in watchdog if an excessive velocity was ever set
++                    if (org.bukkit.craftbukkit.CraftServer.excessiveVelEx != null) {
++                        log.log(Level.SEVERE, "------------------------------");
++                        log.log(Level.SEVERE, "During the run of the server, a plugin set an excessive velocity on an entity");
++                        log.log(Level.SEVERE, "This may be the cause of the issue, or it may be entirely unrelated");
++                        log.log(Level.SEVERE, org.bukkit.craftbukkit.CraftServer.excessiveVelEx.getMessage());
++                        for (StackTraceElement stack : org.bukkit.craftbukkit.CraftServer.excessiveVelEx.getStackTrace()) {
++                            log.log(Level.SEVERE, "\t\t" + stack);
++                        }
++                    }
++                    // Paper end
++                } else {
+                     // Gale start - branding changes
+                     /*
+                     We do not want people to report thread issues to Paper,
+                     but we do want people to report thread issues to Gale.
+                     */
+-                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - If you think this is a Leaf bug, please report it at https://github.com/Winds-Studio/Leaf/issues - THIS IS NOT A PAPER BUG OR CRASH - " + Bukkit.getServer().getVersion() + " ---"); // Leaf
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - If you think this is a NorsPaper bug, please report it at https://github.com/Nors-Studio/NorsPaper/issues - THIS IS NOT A PAPER BUG OR CRASH - " + Bukkit.getServer().getVersion() + " ---"); // Leaf // NorsPaper
+                     // Gale end - branding changes
+                     log.log(Level.SEVERE, "The server has not responded for " + (currentTime - lastTick) / 1000 + " seconds! Creating thread dump");
+                 }
+                 // Paper end - Different message for short timeout
+-                log.log( Level.SEVERE, "------------------------------" );
+-                log.log( Level.SEVERE, "Server thread dump (Look for plugins here before reporting to Leaf!):" ); // Paper // Gale - branding changes // Leaf
++                log.log(Level.SEVERE, "------------------------------");
++                log.log(Level.SEVERE, "Server thread dump (Look for plugins here before reporting to NorsPaper!):"); // Paper // Gale - branding changes // Leaf // NorsPaper
+                 ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler.dumpAllChunkLoadInfo(MinecraftServer.getServer(), isLongTimeout); // Paper - rewrite chunk system
+                 this.dumpTickingInfo(); // Paper - log detailed tick information
+-                WatchdogThread.dumpThread( ManagementFactory.getThreadMXBean().getThreadInfo( MinecraftServer.getServer().serverThread.getId(), Integer.MAX_VALUE ), log );
+-                log.log( Level.SEVERE, "------------------------------" );
++                WatchdogThread.dumpThread(ManagementFactory.getThreadMXBean().getThreadInfo(MinecraftServer.getServer().serverThread.getId(), Integer.MAX_VALUE), log);
++                log.log(Level.SEVERE, "------------------------------");
+                 //
+                 // Paper start - Only print full dump on long timeouts
+-                if ( isLongTimeout )
+-                {
+-                log.log( Level.SEVERE, "Entire Thread Dump:" );
+-                ThreadInfo[] threads = ManagementFactory.getThreadMXBean().dumpAllThreads( true, true );
+-                for ( ThreadInfo thread : threads )
+-                {
+-                    WatchdogThread.dumpThread( thread, log );
+-                }
++                if (isLongTimeout) {
++                    log.log(Level.SEVERE, "Entire Thread Dump:");
++                    ThreadInfo[] threads = ManagementFactory.getThreadMXBean().dumpAllThreads(true, true);
++                    for (ThreadInfo thread : threads) {
++                        WatchdogThread.dumpThread(thread, log);
++                    }
+                 } else {
+                     // Gale start - branding changes
+                     /*
+                     We do not want people to report thread issues to Paper,
+                     but we do want people to report thread issues to Gale.
+                      */
+-                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - If you think this is a Leaf bug, please report it at https://github.com/Winds-Studio/Leaf/issues - THIS IS NOT A PAPER BUG OR CRASH ---"); // Leaf
++                    log.log(Level.SEVERE, "--- DO NOT REPORT THIS TO PAPER - If you think this is a NorsPaper bug, please report it at https://github.com/Nors-Studio/NorsPaper/issues - THIS IS NOT A PAPER BUG OR CRASH ---"); // Leaf // NorsPaper
+                     // Gale end - branding changes
+                 }
+ 
+-                log.log( Level.SEVERE, "------------------------------" );
++                log.log(Level.SEVERE, "------------------------------");
+ 
+-                if ( isLongTimeout )
+-                {
+-                if ( !server.hasStopped() )
+-                {
+-                    AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us
+-                    server.forceTicks = true;
+-                    if (restart) {
+-                        RestartCommand.addShutdownHook( SpigotConfig.restartScript );
+-                    }
+-                    // try one last chance to safe shutdown on main incase it 'comes back'
+-                    server.abnormalExit = true;
+-                    server.safeShutdown(false, restart);
+-                    try {
+-                        Thread.sleep(1000);
+-                    } catch (InterruptedException e) {
+-                        e.printStackTrace();
+-                    }
++                if (isLongTimeout) {
+                     if (!server.hasStopped()) {
+-                        server.close();
++                        AsyncCatcher.enabled = false; // Disable async catcher incase it interferes with us
++                        server.forceTicks = true;
++                        if (restart) {
++                            RestartCommand.addShutdownHook(SpigotConfig.restartScript);
++                        }
++                        // try one last chance to safe shutdown on main incase it 'comes back'
++                        server.abnormalExit = true;
++                        server.safeShutdown(false, restart);
++                        try {
++                            Thread.sleep(1000);
++                        } catch (InterruptedException e) {
++                            e.printStackTrace();
++                        }
++                        if (!server.hasStopped()) {
++                            server.close();
++                        }
+                     }
+-                }
+-                break;
++                    break;
+                 } // Paper end
+             }
+ 
+-            try
+-            {
+-                sleep( 1000 ); // Paper - Reduce check time to every second instead of every ten seconds, more consistent and allows for short timeout
+-            } catch ( InterruptedException ex )
+-            {
++            try {
++                sleep(1000); // Paper - Reduce check time to every second instead of every ten seconds, more consistent and allows for short timeout
++            } catch (InterruptedException ex) {
+                 this.interrupt();
+             }
+         }
+     }
+ 
+-    private static void dumpThread(ThreadInfo thread, Logger log)
+-    {
+-        log.log( Level.SEVERE, "------------------------------" );
++    private static void dumpThread(ThreadInfo thread, Logger log) {
++        log.log(Level.SEVERE, "------------------------------");
+         //
+-        log.log( Level.SEVERE, "Current Thread: " + thread.getThreadName() );
+-        log.log( Level.SEVERE, "\tPID: " + thread.getThreadId()
++        log.log(Level.SEVERE, "Current Thread: " + thread.getThreadName());
++        log.log(Level.SEVERE, "\tPID: " + thread.getThreadId()
+                 + " | Suspended: " + thread.isSuspended()
+                 + " | Native: " + thread.isInNative()
+-                + " | State: " + thread.getThreadState() );
+-        if ( thread.getLockedMonitors().length != 0 )
+-        {
+-            log.log( Level.SEVERE, "\tThread is waiting on monitor(s):" );
+-            for ( MonitorInfo monitor : thread.getLockedMonitors() )
+-            {
+-                log.log( Level.SEVERE, "\t\tLocked on:" + monitor.getLockedStackFrame() );
++                + " | State: " + thread.getThreadState());
++        if (thread.getLockedMonitors().length != 0) {
++            log.log(Level.SEVERE, "\tThread is waiting on monitor(s):");
++            for (MonitorInfo monitor : thread.getLockedMonitors()) {
++                log.log(Level.SEVERE, "\t\tLocked on:" + monitor.getLockedStackFrame());
+             }
+         }
+-        log.log( Level.SEVERE, "\tStack:" );
++        log.log(Level.SEVERE, "\tStack:");
+         //
+-        for ( StackTraceElement stack : io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateStacktrace(thread.getStackTrace()) ) // Paper
++        for (StackTraceElement stack : io.papermc.paper.util.StacktraceDeobfuscator.INSTANCE.deobfuscateStacktrace(thread.getStackTrace())) // Paper
+         {
+-            log.log( Level.SEVERE, "\t\t" + stack );
++            log.log(Level.SEVERE, "\t\t" + stack);
+         }
+     }
+ }

@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Tue, 21 Jan 2025 20:58:44 +0530
+Subject: [PATCH] API add
+
+
+diff --git a/src/main/java/net/vansen/norspaper/commands/BrigadierCommand.java b/src/main/java/net/vansen/norspaper/commands/BrigadierCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..1087c8a6b339c217f8498bc4acf9af47f70835c3
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/commands/BrigadierCommand.java
+@@ -0,0 +1,13 @@
++package net.vansen.norspaper.commands;
++
++import com.mojang.brigadier.tree.LiteralCommandNode;
++import io.papermc.paper.command.brigadier.CommandSourceStack;
++import org.jetbrains.annotations.NotNull;
++
++// TODO
++public class BrigadierCommand {
++
++    private void register(@NotNull LiteralCommandNode<CommandSourceStack> node) {
++        
++    }
++}

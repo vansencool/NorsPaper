@@ -5,8 +5,8 @@ pluginManagement {
     }
 }
 
-rootProject.name = "tentacles"
-for (name in listOf("Tentacles-API", "Tentacles-Server", "paper-api-generator")) {
+rootProject.name = "NorsPaper"
+for (name in listOf("NorsPaper-API", "NorsPaper-Server", "paper-api-generator")) {
     val projName = name.lowercase()
     include(projName)
     findProject(":$projName")!!.projectDir = file(name)

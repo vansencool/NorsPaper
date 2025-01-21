@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Tue, 21 Jan 2025 23:26:54 +0530
+Subject: [PATCH] Rebrand-2
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 5873b42c198d7972e4147d019c790b612ae1b735..13ab55cc16ac0c1f8730211131e55435fb7aaed2 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -1,13 +1,14 @@
+ package io.papermc.paper;
+ 
+-import java.time.Instant;
+-import java.util.Optional;
+-import java.util.OptionalInt;
+ import net.kyori.adventure.key.Key;
+ import net.kyori.adventure.util.Services;
+ import org.jetbrains.annotations.ApiStatus;
+ import org.jspecify.annotations.NullMarked;
+ 
++import java.time.Instant;
++import java.util.Optional;
++import java.util.OptionalInt;
++
+ /**
+  * Information about the current server build.
+  */
+@@ -44,6 +45,13 @@ public interface ServerBuildInfo {
+     Key BRAND_LEAF_ID = Key.key("winds-studio", "leaf");
+     // Leaf end
+ 
++    // NorsPaper start
++    /**
++     * The brand id for NorsPaper.
++     */
++    Key BRAND_NORSPAPER_ID = Key.key("norspaper", "norspaper");
++    // NorsPaper end
++
+     /**
+      * Gets the {@code ServerBuildInfo}.
+      *
