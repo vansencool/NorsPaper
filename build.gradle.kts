@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     java
     `maven-publish`
@@ -78,4 +80,19 @@ paperweight {
             outputDir = layout.projectDirectory.dir("paper-api-generator/generated")
         }
     }
+}
+
+tasks.withType<Jar> {
+    manifest {
+        attributes["Implementation-Commit"] = execAndGetStdout("git rev-parse --short HEAD")
+    }
+}
+
+fun execAndGetStdout(command: String): String {
+    val stdout = ByteArrayOutputStream()
+    exec {
+        commandLine = command.split(" ")
+        standardOutput = stdout
+    }
+    return stdout.toString(Charsets.UTF_8).trim()
 }
