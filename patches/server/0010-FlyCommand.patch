@@ -1,0 +1,56 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Wed, 22 Jan 2025 19:18:13 +0530
+Subject: [PATCH] FlyCommand
+
+
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index 278c3f9ab3db46d27695948580889cc7b5e7e890..bfbeb5d00f7889aa4c63506644dd1f9adb9d2cfb 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -36,6 +36,7 @@ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.tags.TagKey;
+ import net.minecraft.util.profiling.jfr.JvmProfiler;
+ import net.minecraft.world.level.GameRules;
++import net.vansen.norspaper.commands.FlyCommand;
+ import net.vansen.norspaper.commands.TpHereCommand;
+ import net.vansen.norspaper.commands.WorldCommand;
+ import org.bukkit.event.player.PlayerCommandSendEvent;
+@@ -169,6 +170,7 @@ public class Commands {
+             org.purpurmc.purpur.command.RamCommand.register(this.dispatcher); // Purpur
+             WorldCommand.register(this.dispatcher); // NorsPaper
+             TpHereCommand.register(this.dispatcher); // NorsPaper
++            FlyCommand.register(this.dispatcher); // NorsPaper
+         }
+ 
+         if (environment.includeIntegrated) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/FlyCommand.java b/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..b20ac05065195697aaf2d27c30ae2c1d24ac7c70
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
+@@ -0,0 +1,24 @@
++package net.vansen.norspaper.commands;
++
++import com.mojang.brigadier.CommandDispatcher;
++import net.minecraft.commands.CommandSourceStack;
++import net.minecraft.commands.Commands;
++import org.bukkit.entity.Player;
++
++public class FlyCommand {
++
++    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
++        dispatcher.register(Commands.literal("fly")
++                .executes(context -> {
++                    if (context.getSource().getEntity() == null) {
++                        return 0;
++                    }
++                    if (context.getSource().getEntity() instanceof Player player) {
++                        player.setFlying(!player.isFlying());
++                        player.sendRichMessage("<greenYou are now " + (player.isFlying() ? "flying" : "not flying"));
++                        return 1;
++                    }
++                    return 0;
++                }));
++    }
++}
