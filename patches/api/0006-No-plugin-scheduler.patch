@@ -1,0 +1,378 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Wed, 22 Jan 2025 18:10:26 +0530
+Subject: [PATCH] No plugin scheduler
+
+
+diff --git a/src/main/java/org/bukkit/scheduler/BukkitScheduler.java b/src/main/java/org/bukkit/scheduler/BukkitScheduler.java
+index 487b5ca23159b531475c3d650894be707b49914e..cd9ed05abc6df32c962f8ebc2a35dbb4099f8578 100644
+--- a/src/main/java/org/bukkit/scheduler/BukkitScheduler.java
++++ b/src/main/java/org/bukkit/scheduler/BukkitScheduler.java
+@@ -1,11 +1,12 @@
+ package org.bukkit.scheduler;
+ 
++import org.bukkit.plugin.Plugin;
++import org.jetbrains.annotations.NotNull;
++
+ import java.util.List;
+ import java.util.concurrent.Callable;
+ import java.util.concurrent.Future;
+ import java.util.function.Consumer;
+-import org.bukkit.plugin.Plugin;
+-import org.jetbrains.annotations.NotNull;
+ 
+ public interface BukkitScheduler {
+ 
+@@ -15,16 +16,16 @@ public interface BukkitScheduler {
+      * This task will be executed by the main server thread.
+      *
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
+-     * @param delay Delay in server ticks before executing task
++     * @param task   Task to be executed
++     * @param delay  Delay in server ticks before executing task
+      * @return Task id number (-1 if scheduling failed)
+      */
+     public int scheduleSyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task, long delay);
+ 
+     /**
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
+-     * @param delay Delay in server ticks before executing task
++     * @param task   Task to be executed
++     * @param delay  Delay in server ticks before executing task
+      * @return Task id number (-1 if scheduling failed)
+      * @deprecated Use {@link BukkitRunnable#runTaskLater(Plugin, long)}
+      */
+@@ -37,14 +38,14 @@ public interface BukkitScheduler {
+      * This task will be executed by the main server thread.
+      *
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
++     * @param task   Task to be executed
+      * @return Task id number (-1 if scheduling failed)
+      */
+     public int scheduleSyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task);
+ 
+     /**
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
++     * @param task   Task to be executed
+      * @return Task id number (-1 if scheduling failed)
+      * @deprecated Use {@link BukkitRunnable#runTask(Plugin)}
+      */
+@@ -57,8 +58,8 @@ public interface BukkitScheduler {
+      * This task will be executed by the main server thread.
+      *
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
+-     * @param delay Delay in server ticks before executing first repeat
++     * @param task   Task to be executed
++     * @param delay  Delay in server ticks before executing first repeat
+      * @param period Period in server ticks of the task
+      * @return Task id number (-1 if scheduling failed)
+      */
+@@ -66,8 +67,8 @@ public interface BukkitScheduler {
+ 
+     /**
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
+-     * @param delay Delay in server ticks before executing first repeat
++     * @param task   Task to be executed
++     * @param delay  Delay in server ticks before executing first repeat
+      * @param period Period in server ticks of the task
+      * @return Task id number (-1 if scheduling failed)
+      * @deprecated Use {@link BukkitRunnable#runTaskTimer(Plugin, long, long)}
+@@ -83,11 +84,11 @@ public interface BukkitScheduler {
+      * executed by a thread managed by the scheduler.
+      *
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
+-     * @param delay Delay in server ticks before executing task
++     * @param task   Task to be executed
++     * @param delay  Delay in server ticks before executing task
+      * @return Task id number (-1 if scheduling failed)
+      * @deprecated This name is misleading, as it does not schedule "a sync"
+-     *     task, but rather, "an async" task
++     * task, but rather, "an async" task
+      */
+     @Deprecated
+     public int scheduleAsyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task, long delay);
+@@ -100,10 +101,10 @@ public interface BukkitScheduler {
+      * be executed by a thread managed by the scheduler.
+      *
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
++     * @param task   Task to be executed
+      * @return Task id number (-1 if scheduling failed)
+      * @deprecated This name is misleading, as it does not schedule "a sync"
+-     *     task, but rather, "an async" task
++     * task, but rather, "an async" task
+      */
+     @Deprecated
+     public int scheduleAsyncDelayedTask(@NotNull Plugin plugin, @NotNull Runnable task);
+@@ -116,12 +117,12 @@ public interface BukkitScheduler {
+      * managed by the scheduler.
+      *
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
+-     * @param delay Delay in server ticks before executing first repeat
++     * @param task   Task to be executed
++     * @param delay  Delay in server ticks before executing first repeat
+      * @param period Period in server ticks of the task
+      * @return Task id number (-1 if scheduling failed)
+      * @deprecated This name is misleading, as it does not schedule "a sync"
+-     *     task, but rather, "an async" task
++     * task, but rather, "an async" task
+      */
+     @Deprecated
+     public int scheduleAsyncRepeatingTask(@NotNull Plugin plugin, @NotNull Runnable task, long delay, long period);
+@@ -135,9 +136,10 @@ public interface BukkitScheduler {
+      * <li>Note2: There is at least an average of 10ms latency until the
+      *     isDone() method returns true.
+      * </ul>
+-     * @param <T> The callable's return type
++     *
++     * @param <T>    The callable's return type
+      * @param plugin Plugin that owns the task
+-     * @param task Task to be executed
++     * @param task   Task to be executed
+      * @return Future Future object related to the task
+      */
+     @NotNull
+@@ -169,7 +171,7 @@ public interface BukkitScheduler {
+      * thread is alive.
+      *
+      * @param taskId The task to check.
+-     * <p>
++     *               <p>
+      * @return If the task is currently running.
+      */
+     public boolean isCurrentlyRunning(int taskId);
+@@ -182,7 +184,7 @@ public interface BukkitScheduler {
+      * will not be queued again.
+      *
+      * @param taskId The task to check.
+-     * <p>
++     *               <p>
+      * @return If the task is queued to be run.
+      */
+     public boolean isQueued(int taskId);
+@@ -211,7 +213,7 @@ public interface BukkitScheduler {
+      * Returns a task that will run on the next server tick.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
++     * @param task   the task to be run
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -219,11 +221,25 @@ public interface BukkitScheduler {
+     @NotNull
+     public BukkitTask runTask(@NotNull Plugin plugin, @NotNull Runnable task) throws IllegalArgumentException;
+ 
++    // NorsPaper start - No plugin scheduler
++
+     /**
+      * Returns a task that will run on the next server tick.
++     * <p>
++     * Very experimental feature, please do not use this except you know what you are doing, and be sure to handle all exceptions yourself!
+      *
+-     * @param plugin the reference to the plugin scheduling task
+      * @param task the task to be run
++     * @throws IllegalArgumentException if task is null
++     */
++    @NotNull
++    public BukkitTask runTask(@NotNull Runnable task) throws IllegalArgumentException;
++    // NorsPaper end - No plugin scheduler
++
++    /**
++     * Returns a task that will run on the next server tick.
++     *
++     * @param plugin the reference to the plugin scheduling task
++     * @param task   the task to be run
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+      */
+@@ -231,7 +247,7 @@ public interface BukkitScheduler {
+ 
+     /**
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
++     * @param task   the task to be run
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -248,7 +264,7 @@ public interface BukkitScheduler {
+      * Returns a task that will run asynchronously.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
++     * @param task   the task to be run
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -263,7 +279,7 @@ public interface BukkitScheduler {
+      * Returns a task that will run asynchronously.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
++     * @param task   the task to be run
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+      */
+@@ -271,7 +287,7 @@ public interface BukkitScheduler {
+ 
+     /**
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
++     * @param task   the task to be run
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -286,8 +302,8 @@ public interface BukkitScheduler {
+      * ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -300,8 +316,8 @@ public interface BukkitScheduler {
+      * ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+      */
+@@ -309,8 +325,8 @@ public interface BukkitScheduler {
+ 
+     /**
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -328,8 +344,8 @@ public interface BukkitScheduler {
+      * of server ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -345,8 +361,8 @@ public interface BukkitScheduler {
+      * of server ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+      */
+@@ -354,8 +370,8 @@ public interface BukkitScheduler {
+ 
+     /**
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -370,8 +386,8 @@ public interface BukkitScheduler {
+      * the specified number of server ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @param period the ticks to wait between runs
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+@@ -385,8 +401,8 @@ public interface BukkitScheduler {
+      * the specified number of server ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @param period the ticks to wait between runs
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -395,8 +411,8 @@ public interface BukkitScheduler {
+ 
+     /**
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task
+      * @param period the ticks to wait between runs
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+@@ -415,9 +431,9 @@ public interface BukkitScheduler {
+      * starting after the specified number of server ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task for the first
+-     *     time
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task for the first
++     *               time
+      * @param period the ticks to wait between runs
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+@@ -434,9 +450,9 @@ public interface BukkitScheduler {
+      * starting after the specified number of server ticks.
+      *
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task for the first
+-     *     time
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task for the first
++     *               time
+      * @param period the ticks to wait between runs
+      * @throws IllegalArgumentException if plugin is null
+      * @throws IllegalArgumentException if task is null
+@@ -445,9 +461,9 @@ public interface BukkitScheduler {
+ 
+     /**
+      * @param plugin the reference to the plugin scheduling task
+-     * @param task the task to be run
+-     * @param delay the ticks to wait before running the task for the first
+-     *     time
++     * @param task   the task to be run
++     * @param delay  the ticks to wait before running the task for the first
++     *               time
+      * @param period the ticks to wait between runs
+      * @return a BukkitTask that contains the id number
+      * @throws IllegalArgumentException if plugin is null
+@@ -459,6 +475,7 @@ public interface BukkitScheduler {
+     public BukkitTask runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull BukkitRunnable task, long delay, long period) throws IllegalArgumentException;
+ 
+     // Paper start - add getMainThreadExecutor
++
+     /**
+      * Returns an executor that will run tasks on the next server tick.
+      *

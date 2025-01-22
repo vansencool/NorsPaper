@@ -1,0 +1,348 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Wed, 22 Jan 2025 18:10:26 +0530
+Subject: [PATCH] No plugin scheduler
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/ServerSchedulerReportingWrapper.java b/src/main/java/com/destroystokyo/paper/ServerSchedulerReportingWrapper.java
+index f699ce18ca044f813e194ef2786b7ea853ea86e7..98448287581d58442fea68b93ece7056d3796a55 100644
+--- a/src/main/java/com/destroystokyo/paper/ServerSchedulerReportingWrapper.java
++++ b/src/main/java/com/destroystokyo/paper/ServerSchedulerReportingWrapper.java
+@@ -1,9 +1,10 @@
+ package com.destroystokyo.paper;
+ 
+-import com.google.common.base.Preconditions;
+-import org.bukkit.craftbukkit.scheduler.CraftTask;
+ import com.destroystokyo.paper.event.server.ServerExceptionEvent;
+ import com.destroystokyo.paper.exception.ServerSchedulerException;
++import com.google.common.base.Preconditions;
++import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
++import org.bukkit.craftbukkit.scheduler.CraftTask;
+ 
+ /**
+  * Reporting wrapper to catch exceptions not natively
+@@ -21,11 +22,23 @@ public class ServerSchedulerReportingWrapper implements Runnable {
+         try {
+             internalTask.run();
+         } catch (RuntimeException e) {
++            // NorsPaper start - No plugin scheduler
++            if (internalTask.getOwner() == null) {
++                ComponentLogger.logger("ServerScheduler").error("Exception running task", e);
++                return;
++            }
++            // NorsPaper end - No plugin scheduler
+             internalTask.getOwner().getServer().getPluginManager().callEvent(
+                     new ServerExceptionEvent(new ServerSchedulerException(e, internalTask))
+             );
+             throw e;
+         } catch (Throwable t) {
++            // NorsPaper start - No plugin scheduler
++            if (internalTask.getOwner() == null) {
++                ComponentLogger.logger("ServerScheduler").error("Exception running task", t);
++                return;
++            }
++            // NorsPaper end - No plugin scheduler
+             internalTask.getOwner().getServer().getPluginManager().callEvent(
+                     new ServerExceptionEvent(new ServerSchedulerException(t, internalTask))
+             ); //Do not rethrow, since it is not permitted with Runnable#run
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index 64d22c2be510ad759bcd6fe192d1ea8cf6bc9a6f..7415c376e2a9758aa3869b338c9a8ffc4c7509d7 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -1,5 +1,6 @@
+ package net.minecraft.commands;
+ 
++import com.google.common.base.Joiner;
+ import com.google.common.collect.Maps;
+ import com.mojang.brigadier.ParseResults;
+ import com.mojang.brigadier.StringReader;
+@@ -13,16 +14,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
+ import com.mojang.brigadier.tree.CommandNode;
+ import com.mojang.brigadier.tree.RootCommandNode;
+ import com.mojang.logging.LogUtils;
+-import java.util.Iterator;
+-import java.util.Map;
+-import java.util.Optional;
+-import java.util.Set;
+-import java.util.function.Consumer;
+-import java.util.function.Predicate;
+-import java.util.function.UnaryOperator;
+-import java.util.stream.Collectors;
+-import java.util.stream.Stream;
+-import javax.annotation.Nullable;
+ import net.minecraft.ChatFormatting;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+@@ -35,111 +26,28 @@ import net.minecraft.core.HolderSet;
+ import net.minecraft.core.Registry;
+ import net.minecraft.data.registries.VanillaRegistries;
+ import net.minecraft.gametest.framework.TestCommand;
+-import net.minecraft.network.chat.ClickEvent;
+-import net.minecraft.network.chat.CommonComponents;
+-import net.minecraft.network.chat.Component;
+-import net.minecraft.network.chat.ComponentUtils;
+-import net.minecraft.network.chat.HoverEvent;
+-import net.minecraft.network.chat.MutableComponent;
++import net.minecraft.network.chat.*;
+ import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+-import net.minecraft.server.commands.AdvancementCommands;
+-import net.minecraft.server.commands.AttributeCommand;
+-import net.minecraft.server.commands.BanIpCommands;
+-import net.minecraft.server.commands.BanListCommands;
+-import net.minecraft.server.commands.BanPlayerCommands;
+-import net.minecraft.server.commands.BossBarCommands;
+-import net.minecraft.server.commands.ClearInventoryCommands;
+-import net.minecraft.server.commands.CloneCommands;
+-import net.minecraft.server.commands.DamageCommand;
+-import net.minecraft.server.commands.DataPackCommand;
+-import net.minecraft.server.commands.DeOpCommands;
+-import net.minecraft.server.commands.DebugConfigCommand;
+-import net.minecraft.server.commands.DebugMobSpawningCommand;
+-import net.minecraft.server.commands.DebugPathCommand;
+-import net.minecraft.server.commands.DefaultGameModeCommands;
+-import net.minecraft.server.commands.DifficultyCommand;
+-import net.minecraft.server.commands.EffectCommands;
+-import net.minecraft.server.commands.EmoteCommands;
+-import net.minecraft.server.commands.EnchantCommand;
+-import net.minecraft.server.commands.ExecuteCommand;
+-import net.minecraft.server.commands.ExperienceCommand;
+-import net.minecraft.server.commands.FillBiomeCommand;
+-import net.minecraft.server.commands.FillCommand;
+-import net.minecraft.server.commands.ForceLoadCommand;
+-import net.minecraft.server.commands.FunctionCommand;
+-import net.minecraft.server.commands.GameModeCommand;
+-import net.minecraft.server.commands.GameRuleCommand;
+-import net.minecraft.server.commands.GiveCommand;
+-import net.minecraft.server.commands.HelpCommand;
+-import net.minecraft.server.commands.ItemCommands;
+-import net.minecraft.server.commands.JfrCommand;
+-import net.minecraft.server.commands.KickCommand;
+-import net.minecraft.server.commands.KillCommand;
+-import net.minecraft.server.commands.ListPlayersCommand;
+-import net.minecraft.server.commands.LocateCommand;
+-import net.minecraft.server.commands.LootCommand;
+-import net.minecraft.server.commands.MsgCommand;
+-import net.minecraft.server.commands.OpCommand;
+-import net.minecraft.server.commands.PardonCommand;
+-import net.minecraft.server.commands.PardonIpCommand;
+-import net.minecraft.server.commands.ParticleCommand;
+-import net.minecraft.server.commands.PerfCommand;
+-import net.minecraft.server.commands.PlaceCommand;
+-import net.minecraft.server.commands.PlaySoundCommand;
+-import net.minecraft.server.commands.PublishCommand;
+-import net.minecraft.server.commands.RaidCommand;
+-import net.minecraft.server.commands.RandomCommand;
+-import net.minecraft.server.commands.RecipeCommand;
+-import net.minecraft.server.commands.ReloadCommand;
+-import net.minecraft.server.commands.ReturnCommand;
+-import net.minecraft.server.commands.RideCommand;
+-import net.minecraft.server.commands.SaveAllCommand;
+-import net.minecraft.server.commands.SaveOffCommand;
+-import net.minecraft.server.commands.SaveOnCommand;
+-import net.minecraft.server.commands.SayCommand;
+-import net.minecraft.server.commands.ScheduleCommand;
+-import net.minecraft.server.commands.ScoreboardCommand;
+-import net.minecraft.server.commands.SeedCommand;
+-import net.minecraft.server.commands.ServerPackCommand;
+-import net.minecraft.server.commands.SetBlockCommand;
+-import net.minecraft.server.commands.SetPlayerIdleTimeoutCommand;
+-import net.minecraft.server.commands.SetSpawnCommand;
+-import net.minecraft.server.commands.SetWorldSpawnCommand;
+-import net.minecraft.server.commands.SpawnArmorTrimsCommand;
+-import net.minecraft.server.commands.SpectateCommand;
+-import net.minecraft.server.commands.SpreadPlayersCommand;
+-import net.minecraft.server.commands.StopCommand;
+-import net.minecraft.server.commands.StopSoundCommand;
+-import net.minecraft.server.commands.SummonCommand;
+-import net.minecraft.server.commands.TagCommand;
+-import net.minecraft.server.commands.TeamCommand;
+-import net.minecraft.server.commands.TeamMsgCommand;
+-import net.minecraft.server.commands.TeleportCommand;
+-import net.minecraft.server.commands.TellRawCommand;
+-import net.minecraft.server.commands.TickCommand;
+-import net.minecraft.server.commands.TimeCommand;
+-import net.minecraft.server.commands.TitleCommand;
+-import net.minecraft.server.commands.TransferCommand;
+-import net.minecraft.server.commands.TriggerCommand;
+-import net.minecraft.server.commands.WardenSpawnTrackerCommand;
+-import net.minecraft.server.commands.WeatherCommand;
+-import net.minecraft.server.commands.WhitelistCommand;
+-import net.minecraft.server.commands.WorldBorderCommand;
++import net.minecraft.server.commands.*;
+ import net.minecraft.server.commands.data.DataCommands;
+ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.tags.TagKey;
+ import net.minecraft.util.profiling.jfr.JvmProfiler;
+ import net.minecraft.world.level.GameRules;
+-import org.slf4j.Logger;
+-
+-// CraftBukkit start
+-import com.google.common.base.Joiner;
+-import java.util.Collection;
+-import java.util.LinkedHashSet;
++import net.vansen.norspaper.commands.WorldCommand;
+ import org.bukkit.event.player.PlayerCommandSendEvent;
+ import org.bukkit.event.server.ServerCommandEvent;
++import org.slf4j.Logger;
++
++import javax.annotation.Nullable;
++import java.util.*;
++import java.util.function.Consumer;
++import java.util.function.Predicate;
++import java.util.function.UnaryOperator;
++import java.util.stream.Collectors;
++import java.util.stream.Stream;
+ // CraftBukkit end
+ 
+ public class Commands {
+@@ -220,7 +128,8 @@ public class Commands {
+         }
+ 
+         if (org.purpurmc.purpur.PurpurConfig.registerMinecraftDebugCommands || SharedConstants.IS_RUNNING_IN_IDE) { // Purpur
+-            if (!org.purpurmc.purpur.PurpurConfig.registerMinecraftDebugCommands) TestCommand.register(this.dispatcher); // Purpur
++            if (!org.purpurmc.purpur.PurpurConfig.registerMinecraftDebugCommands)
++                TestCommand.register(this.dispatcher); // Purpur
+             RaidCommand.register(this.dispatcher, commandRegistryAccess);
+             DebugPathCommand.register(this.dispatcher);
+             DebugMobSpawningCommand.register(this.dispatcher);
+@@ -257,6 +166,7 @@ public class Commands {
+             org.purpurmc.purpur.command.CompassCommand.register(this.dispatcher); // Purpur
+             org.purpurmc.purpur.command.RamBarCommand.register(this.dispatcher); // Purpur
+             org.purpurmc.purpur.command.RamCommand.register(this.dispatcher); // Purpur
++            WorldCommand.register(this.dispatcher); // NorsPaper
+         }
+ 
+         if (environment.includeIntegrated) {
+@@ -277,13 +187,14 @@ public class Commands {
+             // E.g. registering the alias minecraft:tp cannot redirect to tp, as tp itself redirects to teleport.
+             // Instead, target the first none redirecting node.
+             CommandNode<CommandSourceStack> flattenedAliasTarget = node;
+-            while (flattenedAliasTarget.getRedirect() != null) flattenedAliasTarget = flattenedAliasTarget.getRedirect();
++            while (flattenedAliasTarget.getRedirect() != null)
++                flattenedAliasTarget = flattenedAliasTarget.getRedirect();
+ 
+             this.dispatcher.register(
+-                com.mojang.brigadier.builder.LiteralArgumentBuilder.<CommandSourceStack>literal("minecraft:" + node.getName())
+-                    .executes(flattenedAliasTarget.getCommand())
+-                    .requires(flattenedAliasTarget.getRequirement())
+-                    .redirect(flattenedAliasTarget)
++                    com.mojang.brigadier.builder.LiteralArgumentBuilder.<CommandSourceStack>literal("minecraft:" + node.getName())
++                            .executes(flattenedAliasTarget.getCommand())
++                            .requires(flattenedAliasTarget.getRequirement())
++                            .redirect(flattenedAliasTarget)
+             );
+         }
+         // Paper end - Brigadier Command API
+@@ -343,6 +254,7 @@ public class Commands {
+         // Paper start
+         this.performCommand(parseresults, s, label, false);
+     }
++
+     public void performCommand(ParseResults<CommandSourceStack> parseresults, String s, String label, boolean throwCommandError) {
+         // Paper end
+         CommandSourceStack commandlistenerwrapper = (CommandSourceStack) parseresults.getContext().getSource();
+@@ -451,18 +363,18 @@ public class Commands {
+         // Register Vanilla commands into builtRoot as before
+         // Paper start - Perf: Async command map building
+         COMMAND_SENDING_POOL.execute(() -> {
+-                this.sendAsync(player);
++            this.sendAsync(player);
+         });
+     }
+ 
+     public static final java.util.concurrent.ThreadPoolExecutor COMMAND_SENDING_POOL = new java.util.concurrent.ThreadPoolExecutor(
+-        0, 2, 60L, java.util.concurrent.TimeUnit.SECONDS,
+-        new java.util.concurrent.LinkedBlockingQueue<>(),
+-        new com.google.common.util.concurrent.ThreadFactoryBuilder()
+-            .setNameFormat("Paper Async Command Builder Thread Pool - %1$d")
+-            .setUncaughtExceptionHandler(new net.minecraft.DefaultUncaughtExceptionHandlerWithName(net.minecraft.server.MinecraftServer.LOGGER))
+-            .build(),
+-        new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy()
++            0, 2, 60L, java.util.concurrent.TimeUnit.SECONDS,
++            new java.util.concurrent.LinkedBlockingQueue<>(),
++            new com.google.common.util.concurrent.ThreadFactoryBuilder()
++                    .setNameFormat("Paper Async Command Builder Thread Pool - %1$d")
++                    .setUncaughtExceptionHandler(new net.minecraft.DefaultUncaughtExceptionHandlerWithName(net.minecraft.server.MinecraftServer.LOGGER))
++                    .build(),
++            new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy()
+     );
+ 
+     private void sendAsync(ServerPlayer player) {
+@@ -481,7 +393,7 @@ public class Commands {
+         // Paper start - Perf: Async command map building
+         new com.destroystokyo.paper.event.brigadier.AsyncPlayerSendCommandsEvent<CommandSourceStack>(player.getBukkitEntity(), (RootCommandNode) rootcommandnode, false).callEvent(); // Paper - Brigadier API
+         net.minecraft.server.MinecraftServer.getServer().execute(() -> {
+-           runSync(player, bukkit, rootcommandnode);
++            runSync(player, bukkit, rootcommandnode);
+         });
+     }
+ 
+@@ -489,22 +401,22 @@ public class Commands {
+         // Paper end - Perf: Async command map building
+         new com.destroystokyo.paper.event.brigadier.AsyncPlayerSendCommandsEvent<CommandSourceStack>(player.getBukkitEntity(), (RootCommandNode) rootcommandnode, true).callEvent(); // Paper - Brigadier API
+         if (PlayerCommandSendEvent.getHandlerList().getRegisteredListeners().length > 0) { // Gale - Purpur - skip PlayerCommandSendEvent if there are no listeners
+-        PlayerCommandSendEvent event = new PlayerCommandSendEvent(player.getBukkitEntity(), new LinkedHashSet<>(bukkit));
+-        event.getPlayer().getServer().getPluginManager().callEvent(event);
++            PlayerCommandSendEvent event = new PlayerCommandSendEvent(player.getBukkitEntity(), new LinkedHashSet<>(bukkit));
++            event.getPlayer().getServer().getPluginManager().callEvent(event);
+ 
+-        // Remove labels that were removed during the event
+-        for (String orig : bukkit) {
+-            if (!event.getCommands().contains(orig)) {
+-                rootcommandnode.removeCommand(orig);
++            // Remove labels that were removed during the event
++            for (String orig : bukkit) {
++                if (!event.getCommands().contains(orig)) {
++                    rootcommandnode.removeCommand(orig);
++                }
+             }
+-        }
+-        // CraftBukkit end
++            // CraftBukkit end
+         } // Gale - Purpur - skip PlayerCommandSendEvent if there are no listeners
+         player.connection.send(new ClientboundCommandsPacket(rootcommandnode));
+     }
+ 
+     private void fillUsableCommands(CommandNode<CommandSourceStack> tree, CommandNode<SharedSuggestionProvider> result, CommandSourceStack source, Map<CommandNode<CommandSourceStack>, CommandNode<SharedSuggestionProvider>> resultNodes) {
+-        resultNodes.keySet().removeIf((node) -> !org.spigotmc.SpigotConfig.sendNamespaced && node.getName().contains( ":" )); // Paper - Remove namedspaced from result nodes to prevent redirect trimming ~ see comment below
++        resultNodes.keySet().removeIf((node) -> !org.spigotmc.SpigotConfig.sendNamespaced && node.getName().contains(":")); // Paper - Remove namedspaced from result nodes to prevent redirect trimming ~ see comment below
+         Iterator iterator = tree.getChildren().iterator();
+ 
+         boolean registeredAskServerSuggestionsForTree = false; // Paper - tell clients to ask server for suggestions for EntityArguments
+@@ -515,7 +427,7 @@ public class Commands {
+                 commandnode2 = commandnode2.clientNode;
+             }
+             // Paper end - Brigadier API
+-            if ( !org.spigotmc.SpigotConfig.sendNamespaced && commandnode2.getName().contains( ":" ) ) continue; // Spigot
++            if (!org.spigotmc.SpigotConfig.sendNamespaced && commandnode2.getName().contains(":")) continue; // Spigot
+ 
+             if (commandnode2.canUse(source)) {
+                 ArgumentBuilder argumentbuilder = commandnode2.createBuilder(); // CraftBukkit - decompile error
+diff --git a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+index d4e0f46c60f0e23658ebed600805c9f673fa8356..e90fa389afe886d6e804542563ead5a11abd10f5 100644
+--- a/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
++++ b/src/main/java/org/bukkit/craftbukkit/scheduler/CraftScheduler.java
+@@ -7,6 +7,7 @@ import org.bukkit.scheduler.BukkitRunnable;
+ import org.bukkit.scheduler.BukkitScheduler;
+ import org.bukkit.scheduler.BukkitTask;
+ import org.bukkit.scheduler.BukkitWorker;
++import org.jetbrains.annotations.NotNull;
+ 
+ import java.util.*;
+ import java.util.concurrent.Callable;
+@@ -139,6 +140,13 @@ public class CraftScheduler implements BukkitScheduler {
+         return this.runTaskLater(plugin, runnable, 0L);
+     }
+ 
++    // NorsPaper start - No plugin scheduler
++    @Override
++    public @NotNull BukkitTask runTask(@NotNull Runnable task) throws IllegalArgumentException {
++        return this.handle(new CraftTask(null, task, this.nextId(), CraftTask.NO_REPEATING), 0);
++    }
++    // NorsPaper end - No plugin scheduler
++
+     @Override
+     public void runTask(Plugin plugin, Consumer<? super BukkitTask> task) throws IllegalArgumentException {
+         this.runTaskLater(plugin, task, 0L);
