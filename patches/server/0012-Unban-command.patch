@@ -1,0 +1,84 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Wed, 22 Jan 2025 20:47:45 +0530
+Subject: [PATCH] Unban command
+
+
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index bfbeb5d00f7889aa4c63506644dd1f9adb9d2cfb..1e0be11bd3f15adf7ec741ebb07e40f33258d728 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -38,6 +38,7 @@ import net.minecraft.util.profiling.jfr.JvmProfiler;
+ import net.minecraft.world.level.GameRules;
+ import net.vansen.norspaper.commands.FlyCommand;
+ import net.vansen.norspaper.commands.TpHereCommand;
++import net.vansen.norspaper.commands.UnbanCommand;
+ import net.vansen.norspaper.commands.WorldCommand;
+ import org.bukkit.event.player.PlayerCommandSendEvent;
+ import org.bukkit.event.server.ServerCommandEvent;
+@@ -171,6 +172,7 @@ public class Commands {
+             WorldCommand.register(this.dispatcher); // NorsPaper
+             TpHereCommand.register(this.dispatcher); // NorsPaper
+             FlyCommand.register(this.dispatcher); // NorsPaper
++            UnbanCommand.register(this.dispatcher); // NorsPaper
+         }
+ 
+         if (environment.includeIntegrated) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/UnbanCommand.java b/src/main/java/net/vansen/norspaper/commands/UnbanCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..dce9c5a87f56f69367ca1ace2f925d3b0826406a
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/commands/UnbanCommand.java
+@@ -0,0 +1,52 @@
++package net.vansen.norspaper.commands;
++
++import com.mojang.authlib.GameProfile;
++import com.mojang.brigadier.CommandDispatcher;
++import com.mojang.brigadier.exceptions.CommandSyntaxException;
++import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
++import net.minecraft.commands.CommandSourceStack;
++import net.minecraft.commands.Commands;
++import net.minecraft.commands.SharedSuggestionProvider;
++import net.minecraft.commands.arguments.GameProfileArgument;
++import net.minecraft.network.chat.Component;
++import net.minecraft.server.players.UserBanList;
++
++import java.util.Collection;
++
++public class UnbanCommand {
++    private static final SimpleCommandExceptionType ERROR_NOT_BANNED = new SimpleCommandExceptionType(Component.translatable("commands.pardon.failed"));
++
++    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
++        dispatcher.register(Commands.literal("unban")
++                .requires(source -> source.getSender().hasPermission("norspaper.command.unban"))
++                .requires(source -> source.hasPermission(3))
++                .then(
++                        Commands.argument("targets", GameProfileArgument.gameProfile())
++                                .suggests(
++                                        (context, builder) -> SharedSuggestionProvider.suggest(
++                                                context.getSource().getServer().getPlayerList().getBans().getUserList(), builder
++                                        )
++                                )
++                                .executes(context -> pardonPlayers(context.getSource(), GameProfileArgument.getGameProfiles(context, "targets")))
++                ));
++    }
++
++    private static int pardonPlayers(CommandSourceStack source, Collection<GameProfile> targets) throws CommandSyntaxException {
++        UserBanList userBanList = source.getServer().getPlayerList().getBans();
++        int i = 0;
++
++        for (GameProfile gameProfile : targets) {
++            if (userBanList.isBanned(gameProfile)) {
++                userBanList.remove(gameProfile);
++                i++;
++                source.sendSuccess(() -> Component.translatable("commands.pardon.success", Component.literal(gameProfile.getName())), true);
++            }
++        }
++
++        if (i == 0) {
++            throw ERROR_NOT_BANNED.create();
++        } else {
++            return i;
++        }
++    }
++}
