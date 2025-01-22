@@ -1,0 +1,57 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Wed, 22 Jan 2025 18:37:21 +0530
+Subject: [PATCH] Tphere command
+
+
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index 7415c376e2a9758aa3869b338c9a8ffc4c7509d7..278c3f9ab3db46d27695948580889cc7b5e7e890 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -36,6 +36,7 @@ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.tags.TagKey;
+ import net.minecraft.util.profiling.jfr.JvmProfiler;
+ import net.minecraft.world.level.GameRules;
++import net.vansen.norspaper.commands.TpHereCommand;
+ import net.vansen.norspaper.commands.WorldCommand;
+ import org.bukkit.event.player.PlayerCommandSendEvent;
+ import org.bukkit.event.server.ServerCommandEvent;
+@@ -167,6 +168,7 @@ public class Commands {
+             org.purpurmc.purpur.command.RamBarCommand.register(this.dispatcher); // Purpur
+             org.purpurmc.purpur.command.RamCommand.register(this.dispatcher); // Purpur
+             WorldCommand.register(this.dispatcher); // NorsPaper
++            TpHereCommand.register(this.dispatcher); // NorsPaper
+         }
+ 
+         if (environment.includeIntegrated) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..5acdd457b43642fc75df27923107e23c965f6863
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+@@ -0,0 +1,25 @@
++package net.vansen.norspaper.commands;
++
++import com.mojang.brigadier.CommandDispatcher;
++import net.minecraft.commands.CommandSourceStack;
++import net.minecraft.commands.Commands;
++import net.minecraft.commands.arguments.EntityArgument;
++import net.minecraft.world.entity.Entity;
++
++public class TpHereCommand {
++
++    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
++        dispatcher.register(Commands.literal("tphere")
++                .then(Commands.argument("targets", EntityArgument.players())
++                        .executes(context -> {
++                            if (context.getSource().getEntity() == null) {
++                                return 0;
++                            }
++                            var targets = EntityArgument.getEntities(context, "targets");
++                            for (Entity player : targets) {
++                                player.getBukkitEntity().teleport(context.getSource().getEntity().getBukkitEntity().getLocation());
++                            }
++                            return 1;
++                        })));
++    }
++}
