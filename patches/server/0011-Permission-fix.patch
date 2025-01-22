@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Wed, 22 Jan 2025 20:26:48 +0530
+Subject: [PATCH] Permission fix
+
+
+diff --git a/src/main/java/net/vansen/norspaper/commands/FlyCommand.java b/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
+index b20ac05065195697aaf2d27c30ae2c1d24ac7c70..f4b02b9b1211b7a06b8685fef7410be9d0b92eeb 100644
+--- a/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
+@@ -9,6 +9,7 @@ public class FlyCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+         dispatcher.register(Commands.literal("fly")
++                .requires(source -> source.getSender().hasPermission("norspaper.command.fly"))
+                 .executes(context -> {
+                     if (context.getSource().getEntity() == null) {
+                         return 0;
+diff --git a/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+index 5acdd457b43642fc75df27923107e23c965f6863..328ee044b2e389e1f11ed527b371458cb3b10d50 100644
+--- a/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+@@ -10,6 +10,7 @@ public class TpHereCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+         dispatcher.register(Commands.literal("tphere")
++                .requires(source -> source.getSender().hasPermission("norspaper.command.tphere"))
+                 .then(Commands.argument("targets", EntityArgument.players())
+                         .executes(context -> {
+                             if (context.getSource().getEntity() == null) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+index 2030babf6f4707f725b38456a8f09b0594bd7eb3..6cdd913cce745c0e58cd55f5459f1c11a0e0904a 100644
+--- a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+@@ -15,7 +15,7 @@ public class WorldCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+         dispatcher.register(Commands.literal("world")
+-                .requires(listener -> listener.hasPermission(2, "norspaper.command.world"))
++                .requires(listener -> listener.getSender().hasPermission("norspaper.command.world"))
+                 .then(Commands.literal("tp")
+                         .then(Commands.argument("targets", EntityArgument.players())
+                                 .then(Commands.argument("world", StringArgumentType.string())
