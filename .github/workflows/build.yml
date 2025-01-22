@@ -26,7 +26,7 @@ jobs:
 
       - name: Rename Paperclip Jar
         run: |
-          mv build/libs/norspaper-paperclip-1.21.1-R0.1-SNAPSHOT-mojmap.jar ./norspaper-1.21.1.jar
+          mv build/libs/NorsPaper-paperclip-1.21.1-R0.1-SNAPSHOT-mojmap.jar ./norspaper-1.21.1.jar
 
       - name: Upload NorsPaper
         uses: actions/upload-artifact@v3
