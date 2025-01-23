@@ -13,7 +13,7 @@ index 6e20b63fcc002dd2d7a148d0315113b12441adc9..9ab93efbf20280c4954bcc1e2db57be6
  
      public static String serverModName = io.papermc.paper.ServerBuildInfo.buildInfo().brandName();
 -    public static String serverGUIName = "Leaf Console";
-+    public static String serverGUIName = "NorsPaper Console";
++    public static String serverGUIName = "NorsPaper Console"; // NorsPaper
  
      @Override
      public void onLoaded() {
