@@ -1,0 +1,94 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Thu, 23 Jan 2025 18:50:09 +0530
+Subject: [PATCH] Bad formating fix
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index 99c39ad37c4d4ae369c17190593f22ece7a0a2ce..7649075d6561c39e384b0481594ae1fa9e51eaf5 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -78,10 +78,12 @@ public record ServerBuildInfoImpl(
+     @Override
+     public @NotNull String asString(final @NotNull StringRepresentation representation) {
+         final StringBuilder sb = new StringBuilder();
++        // NorsPaper start - new StringRepresentation type
+         if (representation == StringRepresentation.VERSION_SIMPLE_WITH_BRAND_NAME) {
+             sb.append(this.brandName);
+             sb.append(' ');
+         }
++        // NorsPaper end - new StringRepresentation type
+         sb.append(this.minecraftVersionId);
+         sb.append('-');
+         if (this.buildNumber.isPresent()) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+index 328ee044b2e389e1f11ed527b371458cb3b10d50..a2e55735ac167e753a83e0d313cd588a26ac4dae 100644
+--- a/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+@@ -6,6 +6,8 @@ import net.minecraft.commands.Commands;
+ import net.minecraft.commands.arguments.EntityArgument;
+ import net.minecraft.world.entity.Entity;
+ 
++import java.util.Collection;
++
+ public class TpHereCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+@@ -16,7 +18,7 @@ public class TpHereCommand {
+                             if (context.getSource().getEntity() == null) {
+                                 return 0;
+                             }
+-                            var targets = EntityArgument.getEntities(context, "targets");
++                            Collection<? extends Entity> targets = EntityArgument.getEntities(context, "targets");
+                             for (Entity player : targets) {
+                                 player.getBukkitEntity().teleport(context.getSource().getEntity().getBukkitEntity().getLocation());
+                             }
+diff --git a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+index 6cdd913cce745c0e58cd55f5459f1c11a0e0904a..aefb10adf6dcabb3a9dc068a721d66e25dcb5fb4 100644
+--- a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+@@ -11,6 +11,8 @@ import org.bukkit.World;
+ import org.bukkit.WorldCreator;
+ import org.bukkit.generator.WorldInfo;
+ 
++import java.util.Collection;
++
+ public class WorldCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+@@ -27,12 +29,12 @@ public class WorldCommand {
+                                             return builder.buildFuture();
+                                         })
+                                         .executes(context -> {
+-                                            var name = context.getArgument("world", String.class);
+-                                            var world = Bukkit.getWorld(name);
++                                            String name = context.getArgument("world", String.class);
++                                            World world = Bukkit.getWorld(name);
+                                             if (world == null) {
+                                                 return 0;
+                                             }
+-                                            var targets = EntityArgument.getEntities(context, "targets");
++                                            Collection<? extends Entity> targets = EntityArgument.getEntities(context, "targets");
+                                             for (Entity player : targets) {
+                                                 player.getBukkitEntity().teleport(world.getSpawnLocation());
+                                             }
+@@ -41,7 +43,7 @@ public class WorldCommand {
+                 .then(Commands.literal("create")
+                         .then(Commands.argument("world", StringArgumentType.string())
+                                 .executes(context -> {
+-                                    var name = context.getArgument("world", String.class);
++                                    String name = context.getArgument("world", String.class);
+                                     if (Bukkit.getWorld(name) != null) {
+                                         return 0;
+                                     }
+@@ -67,8 +69,8 @@ public class WorldCommand {
+                                     return builder.buildFuture();
+                                 })
+                                 .executes(context -> {
+-                                    var name = context.getArgument("world", String.class);
+-                                    var world = Bukkit.getWorld(name);
++                                    String name = context.getArgument("world", String.class);
++                                    World world = Bukkit.getWorld(name);
+                                     if (world == null) {
+                                         return 0;
+                                     }
