@@ -8,7 +8,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
       - name: Set up JDK
         uses: graalvm/setup-graalvm@v1
@@ -32,7 +32,7 @@ jobs:
         run: mv build/libs/NorsPaper-paperclip-1.21.1-R0.1-SNAPSHOT-mojmap.jar ./norspaper-1.21.1.jar
 
       - name: Upload NorsPaper
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: NorsPaper 1.21.1
           path: ./norspaper-1.21.1.jar
