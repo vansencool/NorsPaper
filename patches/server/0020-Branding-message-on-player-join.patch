@@ -1,0 +1,728 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Thu, 23 Jan 2025 23:16:22 +0530
+Subject: [PATCH] Branding message on player join
+
+
+diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
+index 94e6f298b12f86f923bb58b88caec6f3c3b37aa6..db7ca521913793e86637b0242903ae9f19ec86ab 100644
+--- a/src/main/java/net/minecraft/server/Main.java
++++ b/src/main/java/net/minecraft/server/Main.java
+@@ -1,28 +1,12 @@
+ package net.minecraft.server;
+ 
+-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
++import com.google.common.base.Charsets;
+ import com.mojang.datafixers.DataFixer;
+ import com.mojang.logging.LogUtils;
+ import com.mojang.serialization.Dynamic;
+ import com.mojang.serialization.Lifecycle;
+-import java.awt.GraphicsEnvironment;
+-import java.io.File;
+-import java.io.IOException;
+-import java.io.UncheckedIOException;
+-import java.net.Proxy;
+-import java.nio.file.Files;
+-import java.nio.file.Path;
+-import java.nio.file.Paths;
+-import java.util.Optional;
+-import java.util.function.BooleanSupplier;
+-import javax.annotation.Nullable;
+-import joptsimple.OptionParser;
+ import joptsimple.OptionSet;
+-import joptsimple.OptionSpec;
+-import joptsimple.util.PathConverter;
+-import joptsimple.util.PathProperties;
+ import net.minecraft.CrashReport;
+-import net.minecraft.DefaultUncaughtExceptionHandler;
+ import net.minecraft.SharedConstants;
+ import net.minecraft.Util;
+ import net.minecraft.commands.Commands;
+@@ -54,26 +38,32 @@ import net.minecraft.world.level.dimension.LevelStem;
+ import net.minecraft.world.level.levelgen.WorldDimensions;
+ import net.minecraft.world.level.levelgen.WorldOptions;
+ import net.minecraft.world.level.levelgen.presets.WorldPresets;
+-import net.minecraft.world.level.storage.LevelDataAndDimensions;
+-import net.minecraft.world.level.storage.LevelResource;
+-import net.minecraft.world.level.storage.LevelStorageSource;
+-import net.minecraft.world.level.storage.LevelSummary;
+-import net.minecraft.world.level.storage.PrimaryLevelData;
++import net.minecraft.world.level.storage.*;
++import net.vansen.norspaper.config.NorsPaperConfig;
++import org.bukkit.configuration.file.YamlConfiguration;
+ import org.slf4j.Logger;
+ 
+-// CraftBukkit start
+-import com.google.common.base.Charsets;
++import javax.annotation.Nullable;
++import java.awt.*;
++import java.io.File;
++import java.io.IOException;
+ import java.io.InputStreamReader;
++import java.io.UncheckedIOException;
++import java.net.Proxy;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.nio.file.Paths;
++import java.util.Optional;
+ import java.util.concurrent.atomic.AtomicReference;
+-import net.minecraft.SharedConstants;
+-import org.bukkit.configuration.file.YamlConfiguration;
++import java.util.function.BooleanSupplier;
+ // CraftBukkit end
+ 
+ public class Main {
+ 
+     private static final Logger LOGGER = LogUtils.getLogger();
+ 
+-    public Main() {}
++    public Main() {
++    }
+ 
+     @DontObfuscate
+     public static void main(final OptionSet optionset) { // CraftBukkit - replaces main(String[] astring)
+@@ -131,6 +121,7 @@ public class Main {
+             Bootstrap.validate();
+             Util.startTimerHackThread();
+             org.dreeam.leaf.config.LeafConfig.loadConfig(); // Leaf
++            NorsPaperConfig.setVariables(); // NorsPaper
+             Path path1 = Paths.get("server.properties");
+             DedicatedServerSettings dedicatedserversettings = new DedicatedServerSettings(optionset); // CraftBukkit - CLI argument support
+ 
+@@ -162,12 +153,11 @@ public class Main {
+             }
+ 
+             // Spigot Start
+-            boolean eulaAgreed = Boolean.getBoolean( "com.mojang.eula.agree" );
+-            if ( eulaAgreed )
+-            {
+-                System.err.println( "You have used the Spigot command line EULA agreement flag." );
+-                System.err.println( "By using this setting you are indicating your agreement to Mojang's EULA (https://account.mojang.com/documents/minecraft_eula)." );
+-                System.err.println( "If you do not agree to the above EULA please stop your server and remove this flag immediately." );
++            boolean eulaAgreed = Boolean.getBoolean("com.mojang.eula.agree");
++            if (eulaAgreed) {
++                System.err.println("You have used the Spigot command line EULA agreement flag.");
++                System.err.println("By using this setting you are indicating your agreement to Mojang's EULA (https://account.mojang.com/documents/minecraft_eula).");
++                System.err.println("If you do not agree to the above EULA please stop your server and remove this flag immediately.");
+             }
+             // Spigot End
+             if (!eula.hasAgreedToEULA() && !eulaAgreed) { // Spigot
+@@ -341,10 +331,10 @@ public class Main {
+                 */
+                 boolean flag2 = !optionset.has("nogui") && !optionset.nonOptionArguments().contains("nogui");
+ 
+-                if(!Boolean.parseBoolean(System.getenv().getOrDefault("PAPER_DISABLE_SERVER_GUI", String.valueOf(false)))) // Paper - Add environment variable to disable server gui
+-                if (flag2 && !GraphicsEnvironment.isHeadless()) {
+-                    dedicatedserver1.showGui();
+-                }
++                if (!Boolean.parseBoolean(System.getenv().getOrDefault("PAPER_DISABLE_SERVER_GUI", String.valueOf(false)))) // Paper - Add environment variable to disable server gui
++                    if (flag2 && !GraphicsEnvironment.isHeadless()) {
++                        dedicatedserver1.showGui();
++                    }
+ 
+                 if (optionset.has("port")) {
+                     int port = (Integer) optionset.valueOf("port");
+@@ -427,7 +417,6 @@ public class Main {
+                 try {
+                     Thread.sleep(1000L);
+                 } catch (InterruptedException interruptedexception) {
+-                    ;
+                 }
+             }
+         }
+diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
+index a7fadf66ff2935c6a3751f2121b0e1a8860cc3f9..de33245cda9beda04e1d75a0ab180cc788ddd789 100644
+--- a/src/main/java/net/minecraft/server/players/PlayerList.java
++++ b/src/main/java/net/minecraft/server/players/PlayerList.java
+@@ -7,25 +7,7 @@ import com.mojang.authlib.GameProfile;
+ import com.mojang.logging.LogUtils;
+ import com.mojang.serialization.DataResult;
+ import com.mojang.serialization.Dynamic;
+-import java.io.File;
+-import java.net.SocketAddress;
+-import java.nio.file.Path;
+-import java.text.SimpleDateFormat;
+-import java.time.Instant;
+-import java.util.Collection;
+-import java.util.EnumSet;
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.Map;
+-import java.util.Objects;
+-import java.util.Optional;
+-import java.util.Set;
+-import java.util.UUID;
+-import java.util.function.Function;
+-import java.util.function.Predicate;
+-import javax.annotation.Nullable;
+ import net.minecraft.ChatFormatting;
+-import net.minecraft.FileUtil;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.LayeredRegistryAccess;
+@@ -33,44 +15,17 @@ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtOps;
+ import net.minecraft.network.Connection;
+ import net.minecraft.network.RegistryFriendlyByteBuf;
+-import net.minecraft.network.chat.ChatType;
+-import net.minecraft.network.chat.Component;
+-import net.minecraft.network.chat.MutableComponent;
+-import net.minecraft.network.chat.OutgoingChatMessage;
+-import net.minecraft.network.chat.PlayerChatMessage;
++import net.minecraft.network.chat.*;
+ import net.minecraft.network.protocol.Packet;
+ import net.minecraft.network.protocol.common.ClientboundUpdateTagsPacket;
+-import net.minecraft.network.protocol.game.ClientboundChangeDifficultyPacket;
+-import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
+-import net.minecraft.network.protocol.game.ClientboundGameEventPacket;
+-import net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket;
+-import net.minecraft.network.protocol.game.ClientboundLoginPacket;
+-import net.minecraft.network.protocol.game.ClientboundPlayerAbilitiesPacket;
+-import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
+-import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+-import net.minecraft.network.protocol.game.ClientboundRespawnPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetBorderLerpSizePacket;
+-import net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket;
+-import net.minecraft.network.protocol.game.ClientboundSetBorderWarningDelayPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetBorderWarningDistancePacket;
+-import net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetChunkCacheRadiusPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetExperiencePacket;
+-import net.minecraft.network.protocol.game.ClientboundSetPlayerTeamPacket;
+-import net.minecraft.network.protocol.game.ClientboundSetSimulationDistancePacket;
+-import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
+-import net.minecraft.network.protocol.game.ClientboundSoundPacket;
+-import net.minecraft.network.protocol.game.ClientboundUpdateMobEffectPacket;
+-import net.minecraft.network.protocol.game.ClientboundUpdateRecipesPacket;
+-import net.minecraft.network.protocol.game.GameProtocols;
++import net.minecraft.network.protocol.game.*;
+ import net.minecraft.network.protocol.status.ServerStatus;
+ import net.minecraft.resources.ResourceKey;
+ import net.minecraft.server.MinecraftServer;
+ import net.minecraft.server.PlayerAdvancements;
+ import net.minecraft.server.RegistryLayer;
+ import net.minecraft.server.ServerScoreboard;
++import net.minecraft.server.dedicated.DedicatedServer;
+ import net.minecraft.server.level.ClientInformation;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.ServerPlayer;
+@@ -101,16 +56,12 @@ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.scores.DisplaySlot;
+ import net.minecraft.world.scores.Objective;
+ import net.minecraft.world.scores.PlayerTeam;
+-import org.slf4j.Logger;
+-
+-// CraftBukkit start
+-import java.util.stream.Collectors;
+-import net.minecraft.server.dedicated.DedicatedServer;
++import net.vansen.norspaper.config.variables.ConfigVariables;
++import org.bukkit.Bukkit;
+ import org.bukkit.Location;
+ import org.bukkit.craftbukkit.CraftServer;
+ import org.bukkit.craftbukkit.CraftWorld;
+ import org.bukkit.craftbukkit.entity.CraftPlayer;
+-import org.bukkit.craftbukkit.util.CraftChatMessage;
+ import org.bukkit.craftbukkit.util.CraftLocation;
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.entity.EntityRemoveEvent;
+@@ -118,9 +69,19 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
+ import org.bukkit.event.player.PlayerJoinEvent;
+ import org.bukkit.event.player.PlayerLoginEvent;
+ import org.bukkit.event.player.PlayerQuitEvent;
+-import org.bukkit.event.player.PlayerRespawnEvent;
+ import org.bukkit.event.player.PlayerRespawnEvent.RespawnReason;
+-import org.bukkit.event.player.PlayerSpawnChangeEvent;
++import org.bukkit.permissions.ServerOperator;
++import org.slf4j.Logger;
++
++import javax.annotation.Nullable;
++import java.io.File;
++import java.net.SocketAddress;
++import java.nio.file.Path;
++import java.text.SimpleDateFormat;
++import java.time.Instant;
++import java.util.*;
++import java.util.function.Function;
++import java.util.function.Predicate;
+ // CraftBukkit end
+ 
+ public abstract class PlayerList {
+@@ -159,7 +120,7 @@ public abstract class PlayerList {
+ 
+     // CraftBukkit start
+     private CraftServer cserver;
+-    private final Map<String,ServerPlayer> playersByName = new java.util.HashMap<>();
++    private final Map<String, ServerPlayer> playersByName = new java.util.HashMap<>();
+     public @Nullable String collideRuleTeamName; // Paper - Configurable player collision
+ 
+     public PlayerList(MinecraftServer server, LayeredRegistryAccess<RegistryLayer> registryManager, PlayerDataStorage saveHandler, int maxPlayers) {
+@@ -180,6 +141,7 @@ public abstract class PlayerList {
+         this.maxPlayers = maxPlayers;
+         this.playerIo = saveHandler;
+     }
++
+     abstract public void loadAndSaveFiles(); // Paper - fix converting txt to json file; moved from DedicatedPlayerList constructor
+ 
+     // Leaves start - replay api
+@@ -254,7 +216,7 @@ public abstract class PlayerList {
+ 
+         player.sentListPacket = true;
+         player.supressTrackerForLogin = false;
+-        ((ServerLevel)player.level()).getChunkSource().chunkMap.addEntity(player);
++        ((ServerLevel) player.level()).getChunkSource().chunkMap.addEntity(player);
+ 
+         this.sendLevelInfo(player, worldserver1);
+ 
+@@ -275,7 +237,7 @@ public abstract class PlayerList {
+                     .getHolderOrThrow(net.minecraft.world.level.biome.Biomes.PLAINS);
+             player.connection.send(new net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket(
+                     new net.minecraft.world.level.chunk.EmptyLevelChunk(worldserver1, player.chunkPosition(), plains),
+-                    worldserver1.getLightEngine(), (java.util.BitSet)null, (java.util.BitSet) null, false)
++                    worldserver1.getLightEngine(), (java.util.BitSet) null, (java.util.BitSet) null, false)
+             );
+         }
+     }
+@@ -310,7 +272,8 @@ public abstract class PlayerList {
+         // CraftBukkit end
+         // Paper start - move logic in Entity to here, to use bukkit supplied world UUID & reset to main world spawn if no valid world is found
+         boolean[] invalidPlayerWorld = {false};
+-        bukkitData: if (optional.isPresent()) {
++        bukkitData:
++        if (optional.isPresent()) {
+             // The main way for bukkit worlds to store the world is the world UUID despite mojang adding custom worlds
+             final org.bukkit.World bWorld;
+             if (optional.get().contains("WorldUUIDMost") && optional.get().contains("WorldUUIDLeast")) {
+@@ -328,18 +291,18 @@ public abstract class PlayerList {
+             }
+         }
+         if (resourcekey == null) { // only run the vanilla logic if we haven't found a world from the bukkit data
+-        // Below is the vanilla way of getting the dimension, this is for migration from vanilla servers
+-        resourcekey = optional.flatMap((nbttagcompound) -> {
+-            // Paper end
+-            DataResult<ResourceKey<Level>> dataresult = DimensionType.parseLegacy(new Dynamic(NbtOps.INSTANCE, nbttagcompound.get("Dimension"))); // CraftBukkit - decompile error
+-            Logger logger = PlayerList.LOGGER;
+-
+-            Objects.requireNonNull(logger);
+-            // Paper start - reset to main world spawn if no valid world is found
+-            final Optional<ResourceKey<Level>> result = dataresult.resultOrPartial(logger::error);
+-            invalidPlayerWorld[0] = result.isEmpty();
+-            return result;
+-        }).orElse(Level.OVERWORLD); // Paper - revert to vanilla default main world, this isn't an "invalid world" since no player data existed
++            // Below is the vanilla way of getting the dimension, this is for migration from vanilla servers
++            resourcekey = optional.flatMap((nbttagcompound) -> {
++                // Paper end
++                DataResult<ResourceKey<Level>> dataresult = DimensionType.parseLegacy(new Dynamic(NbtOps.INSTANCE, nbttagcompound.get("Dimension"))); // CraftBukkit - decompile error
++                Logger logger = PlayerList.LOGGER;
++
++                Objects.requireNonNull(logger);
++                // Paper start - reset to main world spawn if no valid world is found
++                final Optional<ResourceKey<Level>> result = dataresult.resultOrPartial(logger::error);
++                invalidPlayerWorld[0] = result.isEmpty();
++                return result;
++            }).orElse(Level.OVERWORLD); // Paper - revert to vanilla default main world, this isn't an "invalid world" since no player data existed
+         }
+         // Paper end
+         ServerLevel worldserver = this.server.getLevel(resourcekey);
+@@ -477,6 +440,18 @@ public abstract class PlayerList {
+             this.server.getPlayerList().broadcastSystemMessage(joinMessage, false); // Paper - Adventure
+         }
+         // CraftBukkit end
++        // NorsPaper start - Branding message on player join
++        if (ConfigVariables.ENABLE_BRANDING_MESSAGE) {
++            if (playerJoinEvent.getBrandingMessage() != null) Bukkit.getOnlinePlayers()
++                    .stream()
++                    .filter(ServerOperator::isOp)
++                    .forEach(p -> p.sendRichMessage(playerJoinEvent.getBrandingMessage()));
++            else Bukkit.getOnlinePlayers()
++                    .stream()
++                    .filter(ServerOperator::isOp)
++                    .forEach(p -> p.sendRichMessage(ConfigVariables.BRAND_MESSAGE.replace("<name>", bukkitPlayer.getName()).replace("<brand>", bukkitPlayer.getClientBrandName())));
++        }
++        // NorsPaper end - Branding message on player join
+ 
+         // CraftBukkit start - sendAll above replaced with this loop
+         ClientboundPlayerInfoUpdatePacket packet = ClientboundPlayerInfoUpdatePacket.createPlayerInitializing(List.of(player)); // Paper - Add Listing API for Player
+@@ -488,9 +463,9 @@ public abstract class PlayerList {
+             if (entityplayer1.getBukkitEntity().canSee(bukkitPlayer)) {
+                 // Paper start - Add Listing API for Player
+                 if (entityplayer1.getBukkitEntity().isListed(bukkitPlayer)) {
+-                // Paper end - Add Listing API for Player
+-                entityplayer1.connection.send(packet);
+-                // Paper start - Add Listing API for Player
++                    // Paper end - Add Listing API for Player
++                    entityplayer1.connection.send(packet);
++                    // Paper start - Add Listing API for Player
+                 } else {
+                     entityplayer1.connection.send(ClientboundPlayerInfoUpdatePacket.createSinglePlayerInitializing(player, false));
+                 }
+@@ -516,7 +491,7 @@ public abstract class PlayerList {
+         // Paper end - Use single player info update packet on join
+         player.sentListPacket = true;
+         player.supressTrackerForLogin = false; // Paper - Fire PlayerJoinEvent when Player is actually ready
+-        ((ServerLevel)player.level()).getChunkSource().chunkMap.addEntity(player); // Paper - Fire PlayerJoinEvent when Player is actually ready; track entity now
++        ((ServerLevel) player.level()).getChunkSource().chunkMap.addEntity(player); // Paper - Fire PlayerJoinEvent when Player is actually ready; track entity now
+         // CraftBukkit end
+ 
+         //player.refreshEntityData(player); // CraftBukkit - BungeeCord#2321, send complete data to self on spawn // Paper - THIS IS NOT NEEDED ANYMORE
+@@ -537,14 +512,15 @@ public abstract class PlayerList {
+         // Paper start - Send empty chunk, so players aren't stuck in the world loading screen with our chunk system not sending chunks when dead
+         if (player.isDeadOrDying()) {
+             net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> plains = worldserver1.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME)
+-                .getHolderOrThrow(net.minecraft.world.level.biome.Biomes.PLAINS);
++                    .getHolderOrThrow(net.minecraft.world.level.biome.Biomes.PLAINS);
+             player.connection.send(new net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket(
+-                new net.minecraft.world.level.chunk.EmptyLevelChunk(worldserver1, player.chunkPosition(), plains),
+-                worldserver1.getLightEngine(), (java.util.BitSet)null, (java.util.BitSet) null, true)
++                    new net.minecraft.world.level.chunk.EmptyLevelChunk(worldserver1, player.chunkPosition(), plains),
++                    worldserver1.getLightEngine(), (java.util.BitSet) null, (java.util.BitSet) null, true)
+             );
+         }
+         // Paper end - Send empty chunk
+     }
++
+     private void mountSavedVehicle(ServerPlayer player, ServerLevel worldserver1, Optional<CompoundTag> optional) {
+         // Paper end - Fire PlayerJoinEvent when Player is actually ready
+         if (optional.isPresent() && ((CompoundTag) optional.get()).contains("RootVehicle", 10)) {
+@@ -595,6 +571,7 @@ public abstract class PlayerList {
+ 
+         // Paper start - Fire PlayerJoinEvent when Player is actually ready
+     }
++
+     public void onPlayerJoinFinish(ServerPlayer player, ServerLevel worldserver1, String s1) {
+         // Paper end - Fire PlayerJoinEvent when Player is actually ready
+         player.initInventoryMenu();
+@@ -608,8 +585,8 @@ public abstract class PlayerList {
+         // Paper end - Configurable player collision
+         org.purpurmc.purpur.task.BossBarTask.addToAll(player); // Purpur
+         if (org.galemc.gale.configuration.GaleGlobalConfiguration.get().logToConsole.playerLoginLocations) { // Gale - JettPack - make logging login location configurable
+-        PlayerList.LOGGER.info("{}[{}] logged in with entity id {} at ([{}]{}, {}, {})", player.getName().getString(), s1, player.getId(), worldserver1.serverLevelData.getLevelName(), player.getX(), player.getY(), player.getZ());
+-        // Gale start - JettPack - make logging login location configurable
++            PlayerList.LOGGER.info("{}[{}] logged in with entity id {} at ([{}]{}, {}, {})", player.getName().getString(), s1, player.getId(), worldserver1.serverLevelData.getLevelName(), player.getX(), player.getY(), player.getZ());
++            // Gale start - JettPack - make logging login location configurable
+         } else {
+             PlayerList.LOGGER.info("{}[{}] logged in with entity id {}", player.getName().getString(), s1, player.getId());
+         }
+@@ -678,10 +655,12 @@ public abstract class PlayerList {
+             }
+ 
+             @Override
+-            public void onBorderSetDamagePerBlock(WorldBorder border, double damagePerBlock) {}
++            public void onBorderSetDamagePerBlock(WorldBorder border, double damagePerBlock) {
++            }
+ 
+             @Override
+-            public void onBorderSetDamageSafeZOne(WorldBorder border, double safeZoneRadius) {}
++            public void onBorderSetDamageSafeZOne(WorldBorder border, double safeZoneRadius) {
++            }
+         });
+     }
+ 
+@@ -759,6 +738,7 @@ public abstract class PlayerList {
+         // Paper start - Fix kick event leave message not being sent
+         return this.remove(entityplayer, net.kyori.adventure.text.Component.translatable("multiplayer.player.left", net.kyori.adventure.text.format.NamedTextColor.YELLOW, io.papermc.paper.configuration.GlobalConfiguration.get().messages.useDisplayNameInQuitMessage ? entityplayer.getBukkitEntity().displayName() : io.papermc.paper.adventure.PaperAdventure.asAdventure(entityplayer.getDisplayName())));
+     }
++
+     public net.kyori.adventure.text.Component remove(ServerPlayer entityplayer, net.kyori.adventure.text.Component leaveMessage) {
+         org.leavesmc.leaves.protocol.core.LeavesProtocolManager.handlePlayerLeave(entityplayer); // Leaves - protocol
+         // Paper end - Fix kick event leave message not being sent
+@@ -778,7 +758,8 @@ public abstract class PlayerList {
+         this.cserver.getPluginManager().callEvent(playerQuitEvent);
+         entityplayer.getBukkitEntity().disconnect(playerQuitEvent.getQuitMessage());
+ 
+-        if (server.isSameThread()) entityplayer.doTick(); // SPIGOT-924 // Paper - don't tick during emergency shutdowns (Watchdog)
++        if (server.isSameThread())
++            entityplayer.doTick(); // SPIGOT-924 // Paper - don't tick during emergency shutdowns (Watchdog)
+         // CraftBukkit end
+ 
+         // Paper start - Configurable player collision; Remove from collideRule team if needed
+@@ -1027,7 +1008,8 @@ public abstract class PlayerList {
+ 
+             if (!flag) entityplayer.reset(); // SPIGOT-4785
+             // Paper start - Add PlayerPostRespawnEvent
+-            if (dimensiontransition == null) return entityplayer; // Early exit, mirrors belows early return for disconnected players in respawn event
++            if (dimensiontransition == null)
++                return entityplayer; // Early exit, mirrors belows early return for disconnected players in respawn event
+             isRespawn = true;
+             location = CraftLocation.toBukkit(dimensiontransition.pos(), dimensiontransition.newLevel().getWorld(), dimensiontransition.yRot(), dimensiontransition.xRot());
+             // Paper end - Add PlayerPostRespawnEvent
+@@ -1057,10 +1039,12 @@ public abstract class PlayerList {
+         ServerLevel worldserver1 = entityplayer1.serverLevel();
+         LevelData worlddata = worldserver1.getLevelData();
+ 
+-        if (!entityplayer.smoothWorldTeleport) entityplayer1.connection.send(new ClientboundRespawnPacket(entityplayer1.createCommonSpawnInfo(worldserver1), (byte) i)); // Slice
++        if (!entityplayer.smoothWorldTeleport)
++            entityplayer1.connection.send(new ClientboundRespawnPacket(entityplayer1.createCommonSpawnInfo(worldserver1), (byte) i)); // Slice
+         entityplayer1.connection.send(new ClientboundSetChunkCacheRadiusPacket(worldserver1.spigotConfig.viewDistance)); // Spigot
+         entityplayer1.connection.send(new ClientboundSetSimulationDistancePacket(worldserver1.spigotConfig.simulationDistance)); // Spigot
+-        if (!entityplayer.smoothWorldTeleport) entityplayer1.connection.teleport(CraftLocation.toBukkit(entityplayer1.position(), worldserver1.getWorld(), entityplayer1.getYRot(), entityplayer1.getXRot())); // CraftBukkit // Slice
++        if (!entityplayer.smoothWorldTeleport)
++            entityplayer1.connection.teleport(CraftLocation.toBukkit(entityplayer1.position(), worldserver1.getWorld(), entityplayer1.getYRot(), entityplayer1.getXRot())); // CraftBukkit // Slice
+         entityplayer1.connection.send(new ClientboundSetDefaultSpawnPositionPacket(worldserver.getSharedSpawnPos(), worldserver.getSharedSpawnAngle()));
+         entityplayer1.connection.send(new ClientboundChangeDifficultyPacket(worlddata.getDifficulty(), worlddata.isDifficultyLocked()));
+         entityplayer1.connection.send(new ClientboundSetExperiencePacket(entityplayer1.experienceProgress, entityplayer1.totalExperience, entityplayer1.experienceLevel));
+@@ -1129,6 +1113,7 @@ public abstract class PlayerList {
+         // Paper start - collect packets
+         this.sendActiveEffects(entity, networkHandler::send);
+     }
++
+     public void sendActiveEffects(LivingEntity entity, java.util.function.Consumer<Packet<? super net.minecraft.network.protocol.game.ClientGamePacketListener>> packetConsumer) {
+         // Paper end - collect packets
+         Iterator iterator = entity.getActiveEffects().iterator();
+@@ -1142,12 +1127,12 @@ public abstract class PlayerList {
+     }
+ 
+     public void sendPlayerPermissionLevel(ServerPlayer player) {
+-    // Paper start - avoid recalculating permissions if possible
++        // Paper start - avoid recalculating permissions if possible
+         this.sendPlayerPermissionLevel(player, true);
+     }
+ 
+     public void sendPlayerPermissionLevel(ServerPlayer player, boolean recalculatePermissions) {
+-    // Paper end - avoid recalculating permissions if possible
++        // Paper end - avoid recalculating permissions if possible
+         GameProfile gameprofile = player.getGameProfile();
+         int i = this.server.getProfilePermissions(gameprofile);
+ 
+@@ -1193,7 +1178,7 @@ public abstract class PlayerList {
+             // Gale start - Purpur - optimize player list for sending player info
+             for (ServerPlayer targetPlayer : sendAllPlayerInfoBucket) {
+                 // Gale end - Purpur - spread out sending all player info
+-                var target = targetPlayer.getBukkitEntity();;
++                var target = targetPlayer.getBukkitEntity();
+                 final List<ServerPlayer> list = new java.util.ArrayList<>(this.players.size());
+                 for (ServerPlayer player : this.players) {
+                     if (target.canSeePlayer(player.getUUID())) {
+@@ -1226,7 +1211,7 @@ public abstract class PlayerList {
+     // CraftBukkit start - add a world/entity limited version
+     public void broadcastAll(Packet packet, net.minecraft.world.entity.player.Player entityhuman) {
+         for (int i = 0; i < this.players.size(); ++i) {
+-            ServerPlayer entityplayer =  this.players.get(i);
++            ServerPlayer entityplayer = this.players.get(i);
+             if (entityhuman != null && !entityplayer.getBukkitEntity().canSee(entityhuman.getBukkitEntity())) {
+                 continue;
+             }
+@@ -1347,6 +1332,7 @@ public abstract class PlayerList {
+         // Paper start - Add sendOpLevel API
+         this.sendPlayerPermissionLevel(player, permissionLevel, true);
+     }
++
+     public void sendPlayerPermissionLevel(ServerPlayer player, int permissionLevel, boolean recalculatePermissions) {
+         // Paper end - Add sendOpLevel API
+         if (player.connection != null) {
+@@ -1365,8 +1351,8 @@ public abstract class PlayerList {
+         }
+ 
+         if (recalculatePermissions) { // Paper - Add sendOpLevel API
+-        player.getBukkitEntity().recalculatePermissions(); // CraftBukkit
+-        this.server.getCommands().sendCommands(player);
++            player.getBukkitEntity().recalculatePermissions(); // CraftBukkit
++            this.server.getCommands().sendCommands(player);
+         } // Paper - Add sendOpLevel API
+ 
+         // Purpur start
+@@ -1395,6 +1381,7 @@ public abstract class PlayerList {
+         // Paper start - ProfileWhitelistVerifyEvent
+         return this.isWhiteListed(profile, null);
+     }
++
+     public boolean isWhiteListed(GameProfile gameprofile, @Nullable org.bukkit.event.player.PlayerLoginEvent loginEvent) {
+         boolean isOp = this.ops.contains(gameprofile);
+         boolean isWhitelisted = !this.doWhiteList || isOp || this.whitelist.contains(gameprofile);
+@@ -1428,7 +1415,7 @@ public abstract class PlayerList {
+ 
+             // CraftBukkit start - Test if player receiving packet can see the source of the packet
+             if (player != null && !entityplayer.getBukkitEntity().canSee(player.getBukkitEntity())) {
+-               continue;
++                continue;
+             }
+             // CraftBukkit end
+ 
+@@ -1451,18 +1438,21 @@ public abstract class PlayerList {
+     }
+ 
+     public void saveAll(int interval) {
+-        io.papermc.paper.util.MCUtil.ensureMain("Save Players" , () -> { // Paper - Ensure main
+-        int numSaved = 0;
+-        long now = MinecraftServer.currentTick;
+-        for (int i = 0; i < this.players.size(); ++i) {
+-            ServerPlayer entityplayer = this.players.get(i);
+-            if (interval == -1 || now - entityplayer.lastSave >= interval) {
+-                this.save(entityplayer);
+-                if (interval != -1 && ++numSaved >= io.papermc.paper.configuration.GlobalConfiguration.get().playerAutoSave.maxPerTick()) { break; }
++        io.papermc.paper.util.MCUtil.ensureMain("Save Players", () -> { // Paper - Ensure main
++            int numSaved = 0;
++            long now = MinecraftServer.currentTick;
++            for (int i = 0; i < this.players.size(); ++i) {
++                ServerPlayer entityplayer = this.players.get(i);
++                if (interval == -1 || now - entityplayer.lastSave >= interval) {
++                    this.save(entityplayer);
++                    if (interval != -1 && ++numSaved >= io.papermc.paper.configuration.GlobalConfiguration.get().playerAutoSave.maxPerTick()) {
++                        break;
++                    }
++                }
++                // Paper end - Incremental chunk and player saving
+             }
+-            // Paper end - Incremental chunk and player saving
+-        }
+-        return null; }); // Paper - ensure main
++            return null;
++        }); // Paper - ensure main
+     }
+ 
+     public UserWhiteList getWhiteList() {
+@@ -1481,7 +1471,8 @@ public abstract class PlayerList {
+         return this.ops.getUserList();
+     }
+ 
+-    public void reloadWhiteList() {}
++    public void reloadWhiteList() {
++    }
+ 
+     public void sendLevelInfo(ServerPlayer player, ServerLevel world) {
+         WorldBorder worldborder = player.level().getWorldBorder(); // CraftBukkit
+@@ -1513,7 +1504,7 @@ public abstract class PlayerList {
+         // CraftBukkit start - from GameRules
+         int i = player.level().getGameRules().getBoolean(GameRules.RULE_REDUCEDDEBUGINFO) ? 22 : 23;
+         player.connection.send(new ClientboundEntityEventPacket(player, (byte) i));
+-        float immediateRespawn = player.level().getGameRules().getBoolean(GameRules.RULE_DO_IMMEDIATE_RESPAWN) ? 1.0F: 0.0F;
++        float immediateRespawn = player.level().getGameRules().getBoolean(GameRules.RULE_DO_IMMEDIATE_RESPAWN) ? 1.0F : 0.0F;
+         player.connection.send(new ClientboundGameEventPacket(ClientboundGameEventPacket.IMMEDIATE_RESPAWN, immediateRespawn));
+         // CraftBukkit end
+     }
+@@ -1580,8 +1571,10 @@ public abstract class PlayerList {
+         // Paper end
+         // CraftBukkit start - disconnect safely
+         for (ServerPlayer player : this.players) {
+-            if (isRestarting) player.connection.disconnect(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.restartMessage), org.bukkit.event.player.PlayerKickEvent.Cause.UNKNOWN); else // Paper - kick event cause (cause is never used here)
+-            player.connection.disconnect(java.util.Objects.requireNonNullElseGet(this.server.server.shutdownMessage(), net.kyori.adventure.text.Component::empty)); // CraftBukkit - add custom shutdown message // Paper - Adventure
++            if (isRestarting)
++                player.connection.disconnect(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(org.spigotmc.SpigotConfig.restartMessage), org.bukkit.event.player.PlayerKickEvent.Cause.UNKNOWN);
++            else // Paper - kick event cause (cause is never used here)
++                player.connection.disconnect(java.util.Objects.requireNonNullElseGet(this.server.server.shutdownMessage(), net.kyori.adventure.text.Component::empty)); // CraftBukkit - add custom shutdown message // Paper - Adventure
+         }
+         // CraftBukkit end
+ 
+@@ -1632,6 +1625,7 @@ public abstract class PlayerList {
+         // Paper start
+         this.broadcastChatMessage(message, sender, params, null);
+     }
++
+     public void broadcastChatMessage(PlayerChatMessage message, ServerPlayer sender, ChatType.Bound params, @Nullable Function<net.kyori.adventure.audience.Audience, Component> unsignedFunction) {
+         // Paper end
+         Objects.requireNonNull(sender);
+@@ -1642,6 +1636,7 @@ public abstract class PlayerList {
+         // Paper start
+         this.broadcastChatMessage(message, shouldSendFiltered, sender, params, null);
+     }
++
+     public void broadcastChatMessage(PlayerChatMessage message, Predicate<ServerPlayer> shouldSendFiltered, @Nullable ServerPlayer sender, ChatType.Bound params, @Nullable Function<net.kyori.adventure.audience.Audience, Component> unsignedFunction) {
+         // Paper end
+         boolean flag = this.verifyChatTrusted(message);
+@@ -1660,8 +1655,8 @@ public abstract class PlayerList {
+             // Paper start - don't send player chat packets from vanished players
+             if (sender != null && !entityplayer1.getBukkitEntity().canSee(sender.getBukkitEntity())) {
+                 entityplayer1.connection.send(unsignedFunction != null
+-                    ? new net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket(unsignedFunction.apply(entityplayer1.getBukkitEntity()), params)
+-                    : disguised);
++                        ? new net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket(unsignedFunction.apply(entityplayer1.getBukkitEntity()), params)
++                        : disguised);
+                 continue;
+             }
+             // Paper end
+@@ -1675,7 +1670,8 @@ public abstract class PlayerList {
+     }
+ 
+     public boolean verifyChatTrusted(PlayerChatMessage message) { // Paper - private -> public
+-        if (!org.dreeam.leaf.config.modules.network.ChatMessageSignature.enabled) return true; // Leaf - Mirai - Configurable chat message signatures
++        if (!org.dreeam.leaf.config.modules.network.ChatMessageSignature.enabled)
++            return true; // Leaf - Mirai - Configurable chat message signatures
+         return message.hasSignature() && !message.hasExpiredServer(Instant.now());
+     }
+ 
+@@ -1778,6 +1774,7 @@ public abstract class PlayerList {
+         this.reloadTagData();
+         this.reloadRecipeData();
+     }
++
+     public void reloadAdvancementData() {
+         // Paper end - API for updating recipes on clients
+         // CraftBukkit start
+@@ -1797,11 +1794,13 @@ public abstract class PlayerList {
+ 
+         // Paper start - API for updating recipes on clients
+     }
++
+     public void reloadTagData() {
+         // Paper end - API for updating recipes on clients
+         this.broadcastAll(new ClientboundUpdateTagsPacket(TagNetworkSerialization.serializeTagsToNetwork(this.registries)));
+         // Paper start - API for updating recipes on clients
+     }
++
+     public void reloadRecipeData() {
+         // Paper end - API for updating recipes on clients
+         ClientboundUpdateRecipesPacket packetplayoutrecipeupdate = new ClientboundUpdateRecipesPacket(this.server.getRecipeManager().getOrderedRecipes());
+@@ -1832,6 +1831,7 @@ public abstract class PlayerList {
+ 
+         return net.kyori.adventure.text.Component.empty();
+     }
++
+     private net.kyori.adventure.text.Component getQuitMsg(net.kyori.adventure.text.Component defaultQuitMsg, Player player) {
+         if (org.dreeam.leaf.config.modules.misc.ConnectionMessage.quitEnabled) {
+             return "default".equals(org.dreeam.leaf.config.modules.misc.ConnectionMessage.quitMessage)
+diff --git a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+index 19f4208fd3699bfa95eb0fd51653b6acc983ada0..c3d480c9795e7f451fcc3fbfe8b6907f0dd337c4 100644
+--- a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+@@ -13,5 +13,9 @@ public class DefaultConfig {
+                 stats_command = true // Enable or disable the stats (and serverstats) command
+                 fly_command = true // Enable or disable the fly command
+             }
++            joins {
++                send_client_brand_message_to_ops_on_player_join = false // Send client brand message to ops on player join
++                brand_message = "<#86C1DB>Player <name> joined the server using <brand>" // Brand message to send
++            }
+             """;
+ }
+diff --git a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+index 07e67027b3f8d1b7049df2427c7bbfeb9ce306b2..75ebb060a9dd15a7fc566514999eed000fda0a2e 100644
+--- a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+@@ -6,6 +6,7 @@ import com.typesafe.config.Config;
+ import com.typesafe.config.ConfigFactory;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import net.minecraft.commands.CommandSourceStack;
++import net.vansen.norspaper.config.variables.ConfigVariables;
+ 
+ import java.io.File;
+ import java.io.FileWriter;
+@@ -57,6 +58,16 @@ public class NorsPaperConfig {
+         }
+     }
+ 
++    public static void setVariables() {
++        loadConfig();
++        if (config.hasPath("joins.send_client_brand_message_to_ops_on_player_join")) {
++            ConfigVariables.ENABLE_BRANDING_MESSAGE = config.getBoolean("joins.send_client_brand_message_to_ops_on_player_join");
++        }
++        if (config.hasPath("joins.brand_message")) {
++            ConfigVariables.BRAND_MESSAGE = config.getString("joins.brand_message");
++        }
++    }
++
+     /**
+      * Saves the default configuration to the config file.
+      */
+diff --git a/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..b2b252d62cfa33dc5e7d799fbec0dcbc28afe48a
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+@@ -0,0 +1,6 @@
++package net.vansen.norspaper.config.variables;
++
++public class ConfigVariables {
++    public static boolean ENABLE_BRANDING_MESSAGE = false;
++    public static String BRAND_MESSAGE = "<#86C1DB>Player <name> joined the server using <brand>";
++}

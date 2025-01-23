@@ -1,0 +1,75 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Thu, 23 Jan 2025 23:16:23 +0530
+Subject: [PATCH] Branding message on player join
+
+
+diff --git a/src/main/java/org/bukkit/event/player/PlayerJoinEvent.java b/src/main/java/org/bukkit/event/player/PlayerJoinEvent.java
+index 3e1e7cd0415509da4dd887db59efa55011b1dab4..06946cfbf741bc8464acbac5bceb26a7808683cb 100644
+--- a/src/main/java/org/bukkit/event/player/PlayerJoinEvent.java
++++ b/src/main/java/org/bukkit/event/player/PlayerJoinEvent.java
+@@ -10,8 +10,12 @@ import org.jetbrains.annotations.Nullable;
+  */
+ public class PlayerJoinEvent extends PlayerEvent {
+     private static final HandlerList handlers = new HandlerList();
++    private boolean disableBranding = false; // NorsPaper
++    private String brandMessage = null; // NorsPaper
++
+     // Paper start
+     private net.kyori.adventure.text.Component joinMessage;
++
+     public PlayerJoinEvent(@NotNull final Player playerJoined, @Nullable final net.kyori.adventure.text.Component joinMessage) {
+         super(playerJoined);
+         this.joinMessage = joinMessage;
+@@ -24,6 +28,7 @@ public class PlayerJoinEvent extends PlayerEvent {
+     }
+ 
+     // Paper start
++
+     /**
+      * Gets the join message to send to all online players
+      *
+@@ -66,6 +71,43 @@ public class PlayerJoinEvent extends PlayerEvent {
+         this.joinMessage = joinMessage != null ? net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(joinMessage) : null; // Paper
+     }
+ 
++    // NorsPaper start - Branding message on player join
++
++    /**
++     * Disables the branding message on player join
++     */
++    public void disableBranding() {
++        this.disableBranding = true;
++    }
++
++    /**
++     * Checks if the branding message is disabled
++     *
++     * @return true if disabled, false otherwise
++     */
++    public boolean isBrandingDisabled() {
++        return this.disableBranding;
++    }
++
++    /**
++     * Sets the branding message
++     *
++     * @param message branding message
++     */
++    public void setBrandingMessage(String message) {
++        this.brandMessage = message;
++    }
++
++    /**
++     * Gets the branding message
++     *
++     * @return branding message, or null if not set (uses from variables by default)
++     */
++    public String getBrandingMessage() {
++        return this.brandMessage;
++    }
++    // NorsPaper end - Branding message on player join
++
+     @NotNull
+     @Override
+     public HandlerList getHandlers() {
