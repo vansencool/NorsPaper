@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Thu, 23 Jan 2025 18:42:16 +0530
+Subject: [PATCH] new StringRepresentation type
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index c24584dd7c03ddd1681d8bb42fb3d5ab8ec97eaf..99c39ad37c4d4ae369c17190593f22ece7a0a2ce 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -78,6 +78,10 @@ public record ServerBuildInfoImpl(
+     @Override
+     public @NotNull String asString(final @NotNull StringRepresentation representation) {
+         final StringBuilder sb = new StringBuilder();
++        if (representation == StringRepresentation.VERSION_SIMPLE_WITH_BRAND_NAME) {
++            sb.append(this.brandName);
++            sb.append(' ');
++        }
+         sb.append(this.minecraftVersionId);
+         sb.append('-');
+         if (this.buildNumber.isPresent()) {

@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Thu, 23 Jan 2025 18:42:17 +0530
+Subject: [PATCH] new StringRepresentation type
+
+
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfo.java b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+index 13ab55cc16ac0c1f8730211131e55435fb7aaed2..cfa12defef231f6aca485be2c7c044748e2424c0 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfo.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfo.java
+@@ -151,5 +151,11 @@ public interface ServerBuildInfo {
+          * A simple version string, in format {@code <minecraftVersionId>-<buildNumber>-<gitBranch>@<gitCommit> (<buildTime>)}.
+          */
+         VERSION_FULL,
++        // NorsPaper start - new StringRepresentation type
++        /**
++         * A simple version string, in format {@code <brandName> <minecraftVersionId>-<buildNumber>-<gitCommit>}.
++         */
++        VERSION_SIMPLE_WITH_BRAND_NAME,
++        // NorsPaper end - new StringRepresentation type
+     }
+ }
