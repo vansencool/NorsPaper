@@ -1,0 +1,378 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Thu, 23 Jan 2025 19:46:26 +0530
+Subject: [PATCH] System dump and Server stats command
+
+
+diff --git a/src/main/java/net/minecraft/commands/Commands.java b/src/main/java/net/minecraft/commands/Commands.java
+index 1e0be11bd3f15adf7ec741ebb07e40f33258d728..7fb17494ddd3d489d1e0f91f36d22abec7624677 100644
+--- a/src/main/java/net/minecraft/commands/Commands.java
++++ b/src/main/java/net/minecraft/commands/Commands.java
+@@ -36,10 +36,7 @@ import net.minecraft.server.level.ServerPlayer;
+ import net.minecraft.tags.TagKey;
+ import net.minecraft.util.profiling.jfr.JvmProfiler;
+ import net.minecraft.world.level.GameRules;
+-import net.vansen.norspaper.commands.FlyCommand;
+-import net.vansen.norspaper.commands.TpHereCommand;
+-import net.vansen.norspaper.commands.UnbanCommand;
+-import net.vansen.norspaper.commands.WorldCommand;
++import net.vansen.norspaper.commands.*;
+ import org.bukkit.event.player.PlayerCommandSendEvent;
+ import org.bukkit.event.server.ServerCommandEvent;
+ import org.slf4j.Logger;
+@@ -173,6 +170,8 @@ public class Commands {
+             TpHereCommand.register(this.dispatcher); // NorsPaper
+             FlyCommand.register(this.dispatcher); // NorsPaper
+             UnbanCommand.register(this.dispatcher); // NorsPaper
++            StatsCommand.register(this.dispatcher); // NorsPaper
++            SystemDump.register(this.dispatcher); // NorsPaper
+         }
+ 
+         if (environment.includeIntegrated) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/StatsCommand.java b/src/main/java/net/vansen/norspaper/commands/StatsCommand.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..d70b9ca4bb517acd1c505c4fc357bb9c4ded039c
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/commands/StatsCommand.java
+@@ -0,0 +1,126 @@
++package net.vansen.norspaper.commands;
++
++import com.mojang.brigadier.CommandDispatcher;
++import com.mojang.brigadier.arguments.StringArgumentType;
++import io.papermc.paper.ServerBuildInfo;
++import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
++import net.minecraft.commands.CommandSourceStack;
++import net.minecraft.commands.Commands;
++import net.vansen.norspaper.paste.PastesDev;
++import org.bukkit.Bukkit;
++import oshi.SystemInfo;
++import oshi.hardware.VirtualMemory;
++import oshi.util.FormatUtil;
++
++import java.lang.management.ManagementFactory;
++import java.net.HttpURLConnection;
++import java.util.Map;
++
++public class StatsCommand {
++
++    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
++        dispatcher.register(Commands.literal("stats")
++                .requires(source -> source.hasPermission(3))
++                .executes(context -> displayStats(context.getSource(), false, false))
++                .then(Commands.argument("args", StringArgumentType.greedyString())
++                        .suggests((context, wrapper) -> {
++                            String input = context.getInput().substring(context.getInput().indexOf(' ') + 1);
++                            String[] suggestions = new String[]{"-system", "-posttopastesdev"};
++
++                            for (String suggestion : suggestions) {
++                                if (!input.contains(suggestion)) {
++                                    wrapper.suggest(input + " " + suggestion);
++                                }
++                            }
++                            return wrapper.buildFuture();
++                        })
++                        .executes(context -> {
++                            String arg = context.getArgument("args", String.class);
++                            boolean system = arg.contains("-system");
++                            boolean postToPastesDev = arg.contains("-posttopastesdev");
++                            return displayStats(context.getSource(), system, postToPastesDev);
++                        })));
++        dispatcher.register(Commands.literal("serverstats")
++                .requires(source -> source.getSender().hasPermission("norspaper.command.stats"))
++                .executes(context -> displayStats(context.getSource(), false, false))
++                .then(Commands.argument("args", StringArgumentType.greedyString())
++                        .suggests((context, wrapper) -> {
++                            String input = context.getInput().substring(context.getInput().indexOf(' ') + 1);
++                            String[] suggestions = new String[]{"-system", "-posttopastesdev"};
++
++                            for (String suggestion : suggestions) {
++                                if (!input.contains(suggestion)) {
++                                    wrapper.suggest(input + " " + suggestion);
++                                }
++                            }
++                            return wrapper.buildFuture();
++                        })
++                        .executes(context -> {
++                            String arg = context.getArgument("args", String.class);
++                            boolean system = arg.contains("-system");
++                            boolean postToPastesDev = arg.contains("-posttopastesdev");
++                            return displayStats(context.getSource(), system, postToPastesDev);
++                        })));
++    }
++
++    public static int displayStats(CommandSourceStack source, boolean system, boolean postToPastesDev) {
++        long jvmUpTime = ManagementFactory.getRuntimeMXBean().getUptime();
++        StringBuilder stats = new StringBuilder("<#86C1DB>Server Statistics (Showing system? ").append(system).append("):<newline>");
++
++        stats.append("<#86C1DB>  Player Count: ").append(source.getServer().getPlayerList().getPlayerCount()).append("<newline>");
++        stats.append("<#86C1DB>  Uptime: ")
++                .append(jvmUpTime / 3600000).append(" hours, ")
++                .append((jvmUpTime % 3600000) / 60000).append(" minutes, ")
++                .append((jvmUpTime % 60000) / 1000).append(" seconds<newline>");
++        stats.append("<#86C1DB>  MSPT: ").append(String.format("%.2f", Bukkit.getAverageTickTime())).append("<newline>");
++        stats.append("<#86C1DB>  TPS: ").append(String.format("%.2f", Math.min(20.0, Bukkit.getTPS()[0]))).append("<newline>");
++        stats.append("<#86C1DB>  Allocated Memory (to Java Runtime): ").append(FormatUtil.formatBytes(Runtime.getRuntime().maxMemory())).append("<newline>");
++
++        if (system) {
++            SystemInfo systemInfo = new SystemInfo();
++            stats.append("<#86C1DB>  Max Memory: ")
++                    .append(FormatUtil.formatBytes(systemInfo.getHardware().getMemory().getTotal())).append("<newline>");
++
++            for (int i = 0; i < systemInfo.getHardware().getMemory().getPhysicalMemory().size(); i++) {
++                stats.append("<#86C1DB>  Memory Type (").append(i + 1).append("): ")
++                        .append(systemInfo.getHardware().getMemory().getPhysicalMemory().get(i).getMemoryType()).append("<newline>");
++            }
++
++            VirtualMemory virtualMemory = systemInfo.getHardware().getMemory().getVirtualMemory();
++            stats.append("<#86C1DB>  Swap Total: ").append(FormatUtil.formatBytes(virtualMemory.getSwapTotal())).append("<newline>");
++            stats.append("<#86C1DB>  Swap Used: ").append(FormatUtil.formatBytes(virtualMemory.getSwapUsed())).append("<newline>");
++            stats.append("<#86C1DB>  Virtual Max: ").append(FormatUtil.formatBytes(virtualMemory.getVirtualMax())).append("<newline>");
++            stats.append("<#86C1DB>  Virtual In Use: ").append(FormatUtil.formatBytes(virtualMemory.getVirtualInUse())).append("<newline>");
++            stats.append("<#86C1DB>  CPU Model: ").append(systemInfo.getHardware().getProcessor().getProcessorIdentifier().getName()).append("<newline>");
++            stats.append("<#86C1DB>  Physical Cores: ").append(systemInfo.getHardware().getProcessor().getPhysicalProcessorCount()).append("<newline>");
++            stats.append("<#86C1DB>  Logical Cores: ").append(systemInfo.getHardware().getProcessor().getLogicalProcessorCount()).append("<newline>");
++            stats.append("<#86C1DB>  Operating System: ").append(systemInfo.getOperatingSystem().getFamily()).append("<newline>");
++        }
++
++        stats.append("<#86C1DB>  Java Version: ").append(System.getProperty("java.version")).append("<newline>");
++        stats.append("<#86C1DB>  Running: ").append(ServerBuildInfo.buildInfo().asString(ServerBuildInfo.StringRepresentation.VERSION_SIMPLE_WITH_BRAND_NAME)).append("<newline>");
++        stats.append("<#86C1DB>  Plugin Count: ").append(Bukkit.getPluginManager().getPlugins().length).append("<newline>");
++
++        if (!system && !postToPastesDev)
++            stats.append("<newline><newline><#86C1DB>Use \"/serverstats system\" for more information about your system.");
++
++        if (!postToPastesDev) source.getSender().sendRichMessage(stats.toString());
++        else {
++            try {
++                HttpURLConnection connection = PastesDev.post(stats.toString().replace("<newline>", "\n").replaceAll("<[^>]*>", ""), "yaml");
++                int responseCode = connection.getResponseCode();
++                if (responseCode == 201) {
++                    Map<String, String> map = PastesDev.asMap(connection);
++                    String key = map.get("key");
++                    source.getSender().sendRichMessage("<#86C1DB>Paste link: <newline><click:OPEN_URL:https://pastes.dev/" + key + ">" + "https://pastes.dev/" + key + "</click>");
++                } else {
++                    source.getSender().sendRichMessage("<red>Error uploading paste: " + responseCode);
++                }
++            } catch (Exception e) {
++                source.getSender().sendRichMessage("<red>Error uploading paste: " + e.getMessage());
++                ComponentLogger.logger("SystemDump").error("Error uploading paste", e);
++            }
++        }
++        return 1;
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/net/vansen/norspaper/commands/SystemDump.java b/src/main/java/net/vansen/norspaper/commands/SystemDump.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..104b423d84fee8331639783ce122821f00209489
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/commands/SystemDump.java
+@@ -0,0 +1,154 @@
++package net.vansen.norspaper.commands;
++
++import com.mojang.brigadier.CommandDispatcher;
++import com.mojang.brigadier.arguments.StringArgumentType;
++import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
++import net.minecraft.commands.CommandSourceStack;
++import net.minecraft.commands.Commands;
++import net.vansen.norspaper.paste.PastesDev;
++import oshi.SystemInfo;
++import oshi.hardware.*;
++import oshi.software.os.OSProcess;
++import oshi.software.os.OperatingSystem;
++import oshi.util.FormatUtil;
++
++import java.net.HttpURLConnection;
++import java.time.Instant;
++import java.util.Arrays;
++import java.util.List;
++import java.util.Map;
++
++public class SystemDump {
++
++    public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
++        dispatcher.register(Commands.literal("systemdump")
++                .requires(source -> source.hasPermission(3))
++                .executes(context -> dumpSystem(context.getSource(), false, false, false, false, false))
++                .then(Commands.argument("args", StringArgumentType.greedyString())
++                        .suggests((context, wrapper) -> {
++                            String input = context.getInput().substring(context.getInput().indexOf(' ') + 1);
++                            String[] suggestions = new String[]{"-all", "-processes", "-network", "-nobasic", "-posttopastesdev"};
++
++                            for (String suggestion : suggestions) {
++                                if (!input.contains(suggestion)) {
++                                    wrapper.suggest(input + " " + suggestion);
++                                }
++                            }
++                            return wrapper.buildFuture();
++                        })
++                        .executes(context -> {
++                            String arg = context.getArgument("args", String.class);
++                            boolean all = arg.contains("-all");
++                            boolean processes = arg.contains("-processes");
++                            boolean network = arg.contains("-network");
++                            boolean noBasic = arg.contains("-nobasic");
++                            boolean postToPastesDev = arg.contains("-posttopastesdev");
++                            return dumpSystem(context.getSource(), all, network, processes, noBasic, postToPastesDev);
++                        })));
++    }
++
++    public static int dumpSystem(CommandSourceStack source, boolean all, boolean network, boolean processes, boolean nobasic, boolean postToPastesDev) {
++        SystemInfo systemInfo = new SystemInfo();
++        source.getSender().sendRichMessage(" ");
++        StringBuilder dump = new StringBuilder("<#86C1DB><bold>System Information Dump:</bold></#86C1DB><newline>");
++        dump.append("<#FF4500>Note:</#FF4500> If any value shows as 0, -0 or seems unusual, it is likely because the system cannot detect it.<newline>");
++        dump.append("<#86C1DB>Variables:</#86C1DB> All: ").append(all).append(", Network: ").append(network).append(", Processes: ").append(processes).append(", Basic: ").append(!nobasic).append(", PostToPastesDev: ").append(postToPastesDev).append("<newline><newline>");
++
++        OperatingSystem os = systemInfo.getOperatingSystem();
++        GlobalMemory memory = systemInfo.getHardware().getMemory();
++        if (!nobasic) {
++            dump.append("<#00FA9A>--- Operating System Information ---</#00FA9A><newline>");
++            dump.append("  <#86C1DB>OS Name:</#86C1DB> ").append(os.getFamily()).append("<newline>");
++            dump.append("  <#86C1DB>OS Version:</#86C1DB> ").append(os.getVersionInfo()).append("<newline>");
++            dump.append("  <#86C1DB>Manufacturer:</#86C1DB> ").append(os.getManufacturer()).append("<newline>");
++            dump.append("  <#86C1DB>Boot Time:</#86C1DB> ").append(Instant.ofEpochSecond(os.getSystemBootTime())).append("<newline>");
++            dump.append("  <#86C1DB>Uptime:</#86C1DB> ").append(FormatUtil.formatElapsedSecs(os.getSystemUptime())).append("<newline><newline>");
++
++            CentralProcessor processor = systemInfo.getHardware().getProcessor();
++            dump.append("<#00FA9A>--- Processor Information ---</#00FA9A><newline>");
++            dump.append("  <#86C1DB>Processor Name:</#86C1DB> ").append(processor.getProcessorIdentifier().getName().trim()).append("<newline>");
++            dump.append("  <#86C1DB>Physical Cores:</#86C1DB> ").append(processor.getPhysicalProcessorCount()).append("<newline>");
++            dump.append("  <#86C1DB>Logical Cores:</#86C1DB> ").append(processor.getLogicalProcessorCount()).append("<newline>");
++            dump.append("  <#86C1DB>System Load Averages:</#86C1DB> ").append(Arrays.toString(processor.getSystemLoadAverage(3))).append("<newline><newline>");
++
++            dump.append("<#00FA9A>--- Memory Information ---</#00FA9A><newline>");
++            dump.append("  <#86C1DB>Total Memory:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getTotal())).append("<newline>");
++            dump.append("  <#86C1DB>Available Memory:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getAvailable())).append("<newline>");
++            dump.append("  <#86C1DB>Swap Total:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getVirtualMemory().getSwapTotal())).append("<newline>");
++            dump.append("  <#86C1DB>Swap Pages In:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getVirtualMemory().getSwapPagesIn())).append("<newline>");
++            dump.append("  <#86C1DB>Swap Pages Out:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getVirtualMemory().getSwapPagesOut())).append("<newline>");
++            dump.append("  <#86C1DB>Swap Used:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getVirtualMemory().getSwapUsed())).append("<newline>");
++            dump.append("  <#86C1DB>Virtual Memory:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getVirtualMemory().getVirtualMax())).append("<newline>");
++            dump.append("  <#86C1DB>Virtual Memory In Use:</#86C1DB> ").append(FormatUtil.formatBytes(memory.getVirtualMemory().getVirtualInUse()));
++            if (network || all || processes) dump.append("<newline><newline>");
++        }
++
++        if (all) {
++            dump.append("<#00FA9A>--- Physical Memory Details ---</#00FA9A><newline>");
++            for (int i = 0; i < memory.getPhysicalMemory().size(); i++) {
++                PhysicalMemory physicalMemory = memory.getPhysicalMemory().get(i);
++                dump.append("  <#86C1DB>Memory Bank ").append(i + 1).append(":</#86C1DB><newline>");
++                dump.append("    <#86C1DB>Type:</#86C1DB> ").append(physicalMemory.getMemoryType()).append("<newline>");
++                dump.append("    <#86C1DB>Capacity:</#86C1DB> ").append(FormatUtil.formatBytes(physicalMemory.getCapacity())).append("<newline>");
++                dump.append("    <#86C1DB>Cloak Speed:</#86C1DB> ").append(FormatUtil.formatHertz(physicalMemory.getClockSpeed())).append("<newline>");
++                dump.append("    <#86C1DB>Manufacturer:</#86C1DB> ").append(physicalMemory.getManufacturer()).append("<newline>");
++            }
++            dump.append("<newline>");
++
++            dump.append("<#00FA9A>--- Disk Information ---</#00FA9A><newline>");
++            for (HWDiskStore diskStore : systemInfo.getHardware().getDiskStores()) {
++                dump.append("  <#86C1DB>Disk Name:</#86C1DB> ").append(diskStore.getName()).append("<newline>");
++                dump.append("    <#86C1DB>Model:</#86C1DB> ").append(diskStore.getModel()).append("<newline>");
++                dump.append("    <#86C1DB>Size:</#86C1DB> ").append(FormatUtil.formatBytesDecimal(diskStore.getSize())).append("<newline>");
++            }
++            dump.append("<newline>");
++
++            dump.append("<#00FA9A>--- Sensors Information ---</#00FA9A><newline>");
++            Sensors sensors = systemInfo.getHardware().getSensors();
++            dump.append("  <#86C1DB>CPU Temperature:</#86C1DB> ").append(sensors.getCpuTemperature()).append(" °C<newline>");
++            dump.append("  <#86C1DB>Fan Speeds:</#86C1DB> ").append(Arrays.toString(sensors.getFanSpeeds())).append("<newline>");
++            dump.append("  <#86C1DB>CPU Voltage:</#86C1DB> ").append(sensors.getCpuVoltage()).append(" V<newline>");
++            if (network || processes) dump.append("<newline>");
++        }
++        if (network) {
++            dump.append("<#00FA9A>--- Network Information ---</#00FA9A><newline>");
++            for (NetworkIF networkIF : systemInfo.getHardware().getNetworkIFs()) {
++                dump.append("  <#86C1DB>Interface Name:</#86C1DB> ").append(networkIF.getName()).append("<newline>");
++                dump.append("    <#86C1DB>IPv4:</#86C1DB> ").append(Arrays.toString(networkIF.getIPv4addr())).append("<newline>");
++                dump.append("    <#86C1DB>IPv6:</#86C1DB> ").append(Arrays.toString(networkIF.getIPv6addr())).append("<newline>");
++                dump.append("    <#86C1DB>Speed:</#86C1DB> ").append(networkIF.getSpeed() / 1_000_000).append(" Mbps<newline>");
++            }
++            if (processes) dump.append("<newline>");
++        }
++        if (processes) {
++            dump.append("<#00FA9A>--- Process Information ---</#00FA9A><newline>");
++            dump.append("  <#86C1DB>Process Count:</#86C1DB> ").append(os.getProcessCount()).append("\n");
++            List<OSProcess> osProcesses = os.getProcesses();
++            for (OSProcess process : osProcesses) {
++                dump.append("<#86C1DB>Process:</#86C1DB> ").append(process.getName()).append("\n");
++                dump.append("  <#86C1DB>PID:</#86C1DB> ").append(process.getProcessID()).append("\n");
++                dump.append("  <#86C1DB>CPU Usage:</#86C1DB> ").append(String.format("%.2f%%", 100d * process.getProcessCpuLoadCumulative())).append("\n");
++                dump.append("  <#86C1DB>Memory Usage:</#86C1DB> ").append(process.getResidentSetSize() / (1024 * 1024)).append(" MB\n");
++            }
++        }
++
++        if (!postToPastesDev) source.getSender().sendRichMessage(dump.toString());
++        else {
++            try {
++                HttpURLConnection connection = PastesDev.post(dump.toString().replace("<newline>", "\n").replaceAll("<[^>]*>", ""), "yaml");
++                int responseCode = connection.getResponseCode();
++                if (responseCode == 201) {
++                    Map<String, String> map = PastesDev.asMap(connection);
++                    String key = map.get("key");
++                    source.getSender().sendRichMessage("<#86C1DB>Paste link: <newline><click:OPEN_URL:https://pastes.dev/" + key + ">" + "https://pastes.dev/" + key + "</click>");
++                } else {
++                    source.getSender().sendRichMessage("<red>Error uploading paste: " + responseCode);
++                }
++            } catch (Exception e) {
++                source.getSender().sendRichMessage("<red>Error uploading paste: " + e.getMessage());
++                ComponentLogger.logger("SystemDump").error("Error uploading paste", e);
++            }
++        }
++        return 1;
++    }
++}
+diff --git a/src/main/java/net/vansen/norspaper/paste/PastesDev.java b/src/main/java/net/vansen/norspaper/paste/PastesDev.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..f1d8bcecfea49a8400d773b52e6880537cf02c54
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/paste/PastesDev.java
+@@ -0,0 +1,48 @@
++package net.vansen.norspaper.paste;
++
++import org.jetbrains.annotations.NotNull;
++
++import java.io.*;
++import java.net.HttpURLConnection;
++import java.net.URL;
++import java.nio.charset.StandardCharsets;
++import java.util.HashMap;
++import java.util.Map;
++
++public class PastesDev {
++
++    public static HttpURLConnection post(String paste, String language) throws Exception {
++        URL url = new URL("https://api.pastes.dev/post");
++        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
++        connection.setRequestMethod("POST");
++        connection.setRequestProperty("Content-Type", "text/" + language);
++        connection.setRequestProperty("User-Agent", "NorsPaper");
++        connection.setDoOutput(true);
++
++        OutputStreamWriter writer = new OutputStreamWriter(new DataOutputStream(connection.getOutputStream()), StandardCharsets.UTF_8);
++        writer.write(paste);
++        writer.close();
++
++        return connection;
++    }
++
++    public static @NotNull Map<String, String> asMap(HttpURLConnection connection) throws IOException {
++        InputStream inputStream = connection.getInputStream();
++        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
++        String line;
++        StringBuilder responseBody = new StringBuilder();
++        while ((line = reader.readLine()) != null) {
++            responseBody.append(line);
++        }
++        reader.close();
++        Map<String, String> map = new HashMap<>();
++        String[] pairs = responseBody.toString().replace("{", "").replace("}", "").split(",");
++        for (String pair : pairs) {
++            String[] keyValue = pair.split(":");
++            if (keyValue.length == 2) {
++                map.put(keyValue[0].trim().replace("\"", ""), keyValue[1].trim().replace("\"", ""));
++            }
++        }
++        return map;
++    }
++}
