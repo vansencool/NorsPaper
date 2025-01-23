@@ -1,0 +1,295 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Thu, 23 Jan 2025 22:36:24 +0530
+Subject: [PATCH] Custom configuration for NorsPaper
+
+
+diff --git a/src/main/java/net/vansen/norspaper/commands/FlyCommand.java b/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
+index f4b02b9b1211b7a06b8685fef7410be9d0b92eeb..c86afe126db81f5a2d43c9f72af3bc30efc882b1 100644
+--- a/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/FlyCommand.java
+@@ -3,12 +3,13 @@ package net.vansen.norspaper.commands;
+ import com.mojang.brigadier.CommandDispatcher;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
++import net.vansen.norspaper.config.NorsPaperConfig;
+ import org.bukkit.entity.Player;
+ 
+ public class FlyCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+-        dispatcher.register(Commands.literal("fly")
++        NorsPaperConfig.register(dispatcher, Commands.literal("fly")
+                 .requires(source -> source.getSender().hasPermission("norspaper.command.fly"))
+                 .executes(context -> {
+                     if (context.getSource().getEntity() == null) {
+@@ -20,6 +21,6 @@ public class FlyCommand {
+                         return 1;
+                     }
+                     return 0;
+-                }));
++                }), "unban");
+     }
+ }
+diff --git a/src/main/java/net/vansen/norspaper/commands/StatsCommand.java b/src/main/java/net/vansen/norspaper/commands/StatsCommand.java
+index d70b9ca4bb517acd1c505c4fc357bb9c4ded039c..e95ede95e5cb467b16a46348a70ea95019ada649 100644
+--- a/src/main/java/net/vansen/norspaper/commands/StatsCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/StatsCommand.java
+@@ -6,6 +6,7 @@ import io.papermc.paper.ServerBuildInfo;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
++import net.vansen.norspaper.config.NorsPaperConfig;
+ import net.vansen.norspaper.paste.PastesDev;
+ import org.bukkit.Bukkit;
+ import oshi.SystemInfo;
+@@ -19,7 +20,7 @@ import java.util.Map;
+ public class StatsCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+-        dispatcher.register(Commands.literal("stats")
++        NorsPaperConfig.register(dispatcher, Commands.literal("stats")
+                 .requires(source -> source.hasPermission(3))
+                 .executes(context -> displayStats(context.getSource(), false, false))
+                 .then(Commands.argument("args", StringArgumentType.greedyString())
+@@ -39,8 +40,8 @@ public class StatsCommand {
+                             boolean system = arg.contains("-system");
+                             boolean postToPastesDev = arg.contains("-posttopastesdev");
+                             return displayStats(context.getSource(), system, postToPastesDev);
+-                        })));
+-        dispatcher.register(Commands.literal("serverstats")
++                        })), "stats");
++        NorsPaperConfig.register(dispatcher, Commands.literal("serverstats")
+                 .requires(source -> source.getSender().hasPermission("norspaper.command.stats"))
+                 .executes(context -> displayStats(context.getSource(), false, false))
+                 .then(Commands.argument("args", StringArgumentType.greedyString())
+@@ -60,7 +61,7 @@ public class StatsCommand {
+                             boolean system = arg.contains("-system");
+                             boolean postToPastesDev = arg.contains("-posttopastesdev");
+                             return displayStats(context.getSource(), system, postToPastesDev);
+-                        })));
++                        })), "stats");
+     }
+ 
+     public static int displayStats(CommandSourceStack source, boolean system, boolean postToPastesDev) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/SystemDump.java b/src/main/java/net/vansen/norspaper/commands/SystemDump.java
+index 104b423d84fee8331639783ce122821f00209489..ee8a45f52f34d4bfb5a94ae05659ea7e2a341854 100644
+--- a/src/main/java/net/vansen/norspaper/commands/SystemDump.java
++++ b/src/main/java/net/vansen/norspaper/commands/SystemDump.java
+@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
++import net.vansen.norspaper.config.NorsPaperConfig;
+ import net.vansen.norspaper.paste.PastesDev;
+ import oshi.SystemInfo;
+ import oshi.hardware.*;
+@@ -21,7 +22,7 @@ import java.util.Map;
+ public class SystemDump {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+-        dispatcher.register(Commands.literal("systemdump")
++        NorsPaperConfig.register(dispatcher, Commands.literal("systemdump")
+                 .requires(source -> source.hasPermission(3))
+                 .executes(context -> dumpSystem(context.getSource(), false, false, false, false, false))
+                 .then(Commands.argument("args", StringArgumentType.greedyString())
+@@ -44,7 +45,7 @@ public class SystemDump {
+                             boolean noBasic = arg.contains("-nobasic");
+                             boolean postToPastesDev = arg.contains("-posttopastesdev");
+                             return dumpSystem(context.getSource(), all, network, processes, noBasic, postToPastesDev);
+-                        })));
++                        })), "system_dump");
+     }
+ 
+     public static int dumpSystem(CommandSourceStack source, boolean all, boolean network, boolean processes, boolean nobasic, boolean postToPastesDev) {
+diff --git a/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+index a2e55735ac167e753a83e0d313cd588a26ac4dae..85d77e0bb3e0a22c1f3cf9c9c995ac5c8446c1a3 100644
+--- a/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/TpHereCommand.java
+@@ -5,13 +5,14 @@ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+ import net.minecraft.commands.arguments.EntityArgument;
+ import net.minecraft.world.entity.Entity;
++import net.vansen.norspaper.config.NorsPaperConfig;
+ 
+ import java.util.Collection;
+ 
+ public class TpHereCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+-        dispatcher.register(Commands.literal("tphere")
++        NorsPaperConfig.register(dispatcher, Commands.literal("tphere")
+                 .requires(source -> source.getSender().hasPermission("norspaper.command.tphere"))
+                 .then(Commands.argument("targets", EntityArgument.players())
+                         .executes(context -> {
+@@ -23,6 +24,6 @@ public class TpHereCommand {
+                                 player.getBukkitEntity().teleport(context.getSource().getEntity().getBukkitEntity().getLocation());
+                             }
+                             return 1;
+-                        })));
++                        })), "tp_here");
+     }
+ }
+diff --git a/src/main/java/net/vansen/norspaper/commands/UnbanCommand.java b/src/main/java/net/vansen/norspaper/commands/UnbanCommand.java
+index dce9c5a87f56f69367ca1ace2f925d3b0826406a..b61802fef8104a3454a387a983c3d9b93b8ac1b7 100644
+--- a/src/main/java/net/vansen/norspaper/commands/UnbanCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/UnbanCommand.java
+@@ -10,6 +10,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
+ import net.minecraft.commands.arguments.GameProfileArgument;
+ import net.minecraft.network.chat.Component;
+ import net.minecraft.server.players.UserBanList;
++import net.vansen.norspaper.config.NorsPaperConfig;
+ 
+ import java.util.Collection;
+ 
+@@ -17,7 +18,7 @@ public class UnbanCommand {
+     private static final SimpleCommandExceptionType ERROR_NOT_BANNED = new SimpleCommandExceptionType(Component.translatable("commands.pardon.failed"));
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+-        dispatcher.register(Commands.literal("unban")
++        NorsPaperConfig.register(dispatcher, Commands.literal("unban")
+                 .requires(source -> source.getSender().hasPermission("norspaper.command.unban"))
+                 .requires(source -> source.hasPermission(3))
+                 .then(
+@@ -28,7 +29,7 @@ public class UnbanCommand {
+                                         )
+                                 )
+                                 .executes(context -> pardonPlayers(context.getSource(), GameProfileArgument.getGameProfiles(context, "targets")))
+-                ));
++                ), "unban");
+     }
+ 
+     private static int pardonPlayers(CommandSourceStack source, Collection<GameProfile> targets) throws CommandSyntaxException {
+diff --git a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+index aefb10adf6dcabb3a9dc068a721d66e25dcb5fb4..fa98cc888304901a84af68a632b3d8c173c47948 100644
+--- a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+@@ -6,6 +6,7 @@ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+ import net.minecraft.commands.arguments.EntityArgument;
+ import net.minecraft.world.entity.Entity;
++import net.vansen.norspaper.config.NorsPaperConfig;
+ import org.bukkit.Bukkit;
+ import org.bukkit.World;
+ import org.bukkit.WorldCreator;
+@@ -16,7 +17,7 @@ import java.util.Collection;
+ public class WorldCommand {
+ 
+     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+-        dispatcher.register(Commands.literal("world")
++        NorsPaperConfig.register(dispatcher, Commands.literal("world")
+                 .requires(listener -> listener.getSender().hasPermission("norspaper.command.world"))
+                 .then(Commands.literal("tp")
+                         .then(Commands.argument("targets", EntityArgument.players())
+@@ -91,6 +92,6 @@ public class WorldCommand {
+                                                 }
+                                             });
+                                     return 1;
+-                                }))));
++                                }))), "world");
+     }
+ }
+diff --git a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..19f4208fd3699bfa95eb0fd51653b6acc983ada0
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+@@ -0,0 +1,17 @@
++package net.vansen.norspaper.config;
++
++public class DefaultConfig {
++
++    public static final String NORSPAPER_DEFAULT_CONFIG = """
++            // Configuration file for NorsPaper
++
++            commands {
++                unban_command = true // Enable or disable the unban command
++                world_command = true // Enable or disable the world command
++                tp_here_command = true // Enable or disable the tphere command
++                system_dump_command = true // Enable or disable the systemdump command
++                stats_command = true // Enable or disable the stats (and serverstats) command
++                fly_command = true // Enable or disable the fly command
++            }
++            """;
++}
+diff --git a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..07e67027b3f8d1b7049df2427c7bbfeb9ce306b2
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+@@ -0,0 +1,74 @@
++package net.vansen.norspaper.config;
++
++import com.mojang.brigadier.CommandDispatcher;
++import com.mojang.brigadier.builder.LiteralArgumentBuilder;
++import com.typesafe.config.Config;
++import com.typesafe.config.ConfigFactory;
++import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
++import net.minecraft.commands.CommandSourceStack;
++
++import java.io.File;
++import java.io.FileWriter;
++import java.io.IOException;
++
++/**
++ * Handles configuration management for NorsPaper.
++ * Provides functionality to register commands based on configuration values.
++ */
++public class NorsPaperConfig {
++    private static final ComponentLogger LOGGER = ComponentLogger.logger("NorsPaper");
++    private static final File PARENT_CONFIG_FILE = new File("norspaper");
++    private static final File CONFIG_FILE = new File(PARENT_CONFIG_FILE, "nors-paper-global.conf");
++    private static Config config;
++
++    /**
++     * Registers a command if the configuration key is enabled (truthy).
++     *
++     * @param dispatcher The command dispatcher.
++     * @param command    The command to register.
++     * @param configKey  The configuration key to check.
++     */
++    public static void register(CommandDispatcher<CommandSourceStack> dispatcher, LiteralArgumentBuilder<CommandSourceStack> command, String configKey) {
++        if (config == null) {
++            loadConfig();
++        }
++
++        String fullKey = "commands." + configKey + "_command";
++        if (config.hasPath(fullKey) && config.getBoolean(fullKey)) {
++            dispatcher.register(command);
++        }
++    }
++
++    /**
++     * Loads the configuration from file or creates a new one using defaults.
++     */
++    private static void loadConfig() {
++        if (!CONFIG_FILE.exists()) {
++            saveDefaultConfig();
++        }
++
++        try {
++            config = ConfigFactory.parseFile(CONFIG_FILE)
++                    .withFallback(ConfigFactory.parseString(DefaultConfig.NORSPAPER_DEFAULT_CONFIG))
++                    .resolve();
++        } catch (Exception e) {
++            LOGGER.error("Failed to load configuration", e);
++            config = ConfigFactory.parseString(DefaultConfig.NORSPAPER_DEFAULT_CONFIG).resolve();
++        }
++    }
++
++    /**
++     * Saves the default configuration to the config file.
++     */
++    private static void saveDefaultConfig() {
++        if (!PARENT_CONFIG_FILE.exists() && !PARENT_CONFIG_FILE.mkdirs()) {
++            LOGGER.error("Failed to create parent config directory.");
++            return;
++        }
++        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
++            writer.write(DefaultConfig.NORSPAPER_DEFAULT_CONFIG);
++        } catch (IOException e) {
++            LOGGER.error("Failed to save default configuration", e);
++        }
++    }
++}
+\ No newline at end of file
