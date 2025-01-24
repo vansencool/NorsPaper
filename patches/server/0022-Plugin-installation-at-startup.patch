@@ -1,0 +1,273 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Fri, 24 Jan 2025 18:03:00 +0530
+Subject: [PATCH] Plugin installation at startup
+
+
+diff --git a/src/main/java/net/minecraft/server/Main.java b/src/main/java/net/minecraft/server/Main.java
+index db7ca521913793e86637b0242903ae9f19ec86ab..6c58461309bbc0158a4723a01ba7d7496d854244 100644
+--- a/src/main/java/net/minecraft/server/Main.java
++++ b/src/main/java/net/minecraft/server/Main.java
+@@ -40,6 +40,7 @@ import net.minecraft.world.level.levelgen.WorldOptions;
+ import net.minecraft.world.level.levelgen.presets.WorldPresets;
+ import net.minecraft.world.level.storage.*;
+ import net.vansen.norspaper.config.NorsPaperConfig;
++import net.vansen.norspaper.plugin.PluginDownloader;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.slf4j.Logger;
+ 
+@@ -115,13 +116,17 @@ public class Main {
+             org.purpurmc.purpur.PurpurConfig.clampEnchantLevels = purpurConfiguration.getBoolean("settings.enchantment.clamp-levels");
+             org.purpurmc.purpur.PurpurConfig.registerMinecraftDebugCommands = purpurConfiguration.getBoolean("settings.register-minecraft-debug-commands");
+             // Purpur end - load config files early
++            // NorsPaper start - Plugin installation at startup
++            NorsPaperConfig.setVariables();
++            PluginDownloader.installRequiredPlugins();
++            // NorsPaper end - Plugin installation at startup
+ 
+             io.papermc.paper.plugin.PluginInitializerManager.load(optionset); // Paper
+             Bootstrap.bootStrap();
+             Bootstrap.validate();
+             Util.startTimerHackThread();
+             org.dreeam.leaf.config.LeafConfig.loadConfig(); // Leaf
+-            NorsPaperConfig.setVariables(); // NorsPaper
++            // NorsPaperConfig.setVariables(); // NorsPaper // NorsPaper - Plugin installation at startup
+             Path path1 = Paths.get("server.properties");
+             DedicatedServerSettings dedicatedserversettings = new DedicatedServerSettings(optionset); // CraftBukkit - CLI argument support
+ 
+diff --git a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+index c3d480c9795e7f451fcc3fbfe8b6907f0dd337c4..8092e9a3a3eb78323991702a6157e5ca258b06e9 100644
+--- a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+@@ -17,5 +17,24 @@ public class DefaultConfig {
+                 send_client_brand_message_to_ops_on_player_join = false // Send client brand message to ops on player join
+                 brand_message = "<#86C1DB>Player <name> joined the server using <brand>" // Brand message to send
+             }
++            plugins {
++                install_pluginmanx_on_server_start = false // Install pluginmanx on server start
++                install_luckperms_on_server_start = false // Install luckperms on server start
++                install_vault_on_server_start = false // Install vault on server start
++                install_placeholderapi_on_server_start = false // Install placeholderapi on server start
++                install_plugin_portal_on_server_start = false // Install plugin portal on server start
++                self_plugins = [ // List of custom plugins to install, please only add id or url, not both...
++                  {
++                    enabled = false,
++                    name = "CoolPluginFromSpigot",
++                    id = "id"
++                  },
++                  {
++                    enabled = false,
++                    name = "SomePluginFromUrl",
++                    url = "https://example.com/plugin.jar"
++                  }
++                ]
++            }
+             """;
+ }
+diff --git a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+index 75ebb060a9dd15a7fc566514999eed000fda0a2e..e6144becc7ed034ef024aebf7e6fe4dbdd7a7497 100644
+--- a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+@@ -7,6 +7,7 @@ import com.typesafe.config.ConfigFactory;
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.vansen.norspaper.config.variables.ConfigVariables;
++import net.vansen.norspaper.plugin.PluginDownloader;
+ 
+ import java.io.File;
+ import java.io.FileWriter;
+@@ -66,6 +67,33 @@ public class NorsPaperConfig {
+         if (config.hasPath("joins.brand_message")) {
+             ConfigVariables.BRAND_MESSAGE = config.getString("joins.brand_message");
+         }
++        if (config.hasPath("plugins.install_pluginmanx_on_server_start")) {
++            ConfigVariables.INSTALL_PLUGINMANX_ON_SERVER_START = config.getBoolean("plugins.install_pluginmanx_on_server_start");
++        }
++        if (config.hasPath("plugins.install_luckperms_on_server_start")) {
++            ConfigVariables.INSTALL_LUCKPERMS_ON_SERVER_START = config.getBoolean("plugins.install_luckperms_on_server_start");
++        }
++        if (config.hasPath("plugins.install_vault_on_server_start")) {
++            ConfigVariables.INSTALL_VAULT_ON_SERVER_START = config.getBoolean("plugins.install_vault_on_server_start");
++        }
++        if (config.hasPath("plugins.install_placeholderapi_on_server_start")) {
++            ConfigVariables.INSTALL_PLACEHOLDERAPI_ON_SERVER_START = config.getBoolean("plugins.install_placeholderapi_on_server_start");
++        }
++        if (config.hasPath("plugins.install_plugin_portal_on_server_start")) {
++            ConfigVariables.INSTALL_PLUGIN_PORTAL_ON_SERVER_START = config.getBoolean("plugins.install_plugin_portal_on_server_start");
++        }
++        if (config.hasPath("plugins.self_plugins")) {
++            for (Config config : config.getConfigList("plugins.self_plugins")) {
++                String pluginName = config.getString("name");
++                if (!config.getBoolean("enabled")) return;
++                if (config.hasPath("id")) {
++                    String pluginId = config.getString("id");
++                    PluginDownloader.downloadPlugin(pluginName, PluginDownloader.getPluginDownloadURL(pluginId)).join();
++                } else {
++                    PluginDownloader.downloadPlugin(pluginName, config.getString("url")).join();
++                }
++            }
++        }
+     }
+ 
+     /**
+diff --git a/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+index b2b252d62cfa33dc5e7d799fbec0dcbc28afe48a..2e402e6c3f227426547309099fe4f971c03a58e6 100644
+--- a/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
++++ b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+@@ -3,4 +3,11 @@ package net.vansen.norspaper.config.variables;
+ public class ConfigVariables {
+     public static boolean ENABLE_BRANDING_MESSAGE = false;
+     public static String BRAND_MESSAGE = "<#86C1DB>Player <name> joined the server using <brand>";
++
++    // Plugins
++    public static boolean INSTALL_PLUGINMANX_ON_SERVER_START = false;
++    public static boolean INSTALL_LUCKPERMS_ON_SERVER_START = false;
++    public static boolean INSTALL_VAULT_ON_SERVER_START = false;
++    public static boolean INSTALL_PLACEHOLDERAPI_ON_SERVER_START = false;
++    public static boolean INSTALL_PLUGIN_PORTAL_ON_SERVER_START = false;
+ }
+diff --git a/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java b/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..56d1efd052c2b02aa2bbc177d992c99b81b0cb73
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
+@@ -0,0 +1,138 @@
++package net.vansen.norspaper.plugin;
++
++import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
++import net.vansen.norspaper.config.variables.ConfigVariables;
++
++import java.io.File;
++import java.io.IOException;
++import java.net.URI;
++import java.net.http.HttpClient;
++import java.net.http.HttpRequest;
++import java.net.http.HttpResponse;
++import java.nio.file.Files;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.concurrent.CompletableFuture;
++
++public class PluginDownloader {
++
++    private static final ComponentLogger logger = ComponentLogger.logger("NorsPaperPluginManager");
++
++    private static final HttpClient client = HttpClient.newBuilder()
++            .followRedirects(HttpClient.Redirect.ALWAYS)
++            .build();
++
++    /**
++     * Get the download URL for a plugin from the Spiget API.
++     *
++     * @param id The resource ID of the plugin.
++     * @return The plugin download URL, or null if the plugin doesn't exist or an error occurs.
++     */
++    public static String getPluginDownloadURL(String id) {
++        if (existPlugin(id)) {
++            return "https://api.spiget.org/v2/resources/" + id + "/download";
++        }
++        return null;
++    }
++
++    /**
++     * Check if a plugin exists on the Spigot API.
++     *
++     * @param id The resource ID of the plugin.
++     * @return True if the plugin exists, false otherwise.
++     */
++    public static boolean existPlugin(String id) {
++        try {
++            String url = "https://api.spigotmc.org/legacy/update.php?resource=" + id;
++            String response = getUrlSource(url);
++            return !response.contains("Invalid resource");
++        } catch (IOException e) {
++            logger.error("Error while checking if plugin with ID '{}' exists. Error: {}", id, e.getMessage());
++            return false;
++        }
++    }
++
++    /**
++     * Downloads a file from the given URL.
++     *
++     * @param name The name of the plugin file to download.
++     * @param url  The URL to download the file from.
++     */
++
++    public static CompletableFuture<Void> downloadPlugin(String name, String url) {
++        File destination = new File("plugins", name + ".jar");
++        if (destination.exists()) return CompletableFuture.completedFuture(null);
++        HttpRequest request = HttpRequest.newBuilder()
++                .uri(URI.create(url))
++                .build();
++
++        return client.sendAsync(request, HttpResponse.BodyHandlers.ofByteArray())
++                .thenAccept(response -> {
++                    if (response.statusCode() == 200) {
++                        try {
++                            Files.write(destination.toPath(), response.body());
++                            logger.info("Downloaded file to '{}'.", destination.getAbsolutePath());
++                        } catch (IOException e) {
++                            logger.error("Failed to write file to '{}'", destination.getAbsolutePath(), e);
++                        }
++                    } else {
++                        logger.error("Failed to download file from '{}'. Status Code: {}", url, response.statusCode());
++                    }
++                })
++                .exceptionally(e -> {
++                    logger.error("Failed to download file from '{}'", url, e);
++                    return null;
++                });
++    }
++
++    /**
++     * Get the content of a URL as a string.
++     *
++     * @param link The URL to fetch.
++     * @return The content of the URL as a string.
++     * @throws IOException If an error occurs while fetching the URL content.
++     */
++    private static String getUrlSource(String link) throws IOException {
++        HttpRequest request = HttpRequest.newBuilder()
++                .uri(URI.create(link))
++                .build();
++
++        try {
++            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
++            if (response.statusCode() == 200) {
++                return response.body();
++            } else {
++                logger.error("Failed to fetch URL '{}'. Status Code: {}", link, response.statusCode());
++                return "";
++            }
++        } catch (IOException | InterruptedException e) {
++            logger.error("Error while fetching URL '{}'. Error: {}", link, e.getMessage());
++            throw new IOException("Failed to fetch URL content", e);
++        }
++    }
++
++    /**
++     * Installs required plugins based on configuration.
++     */
++    public static void installRequiredPlugins() {
++        List<CompletableFuture<Void>> futures = new ArrayList<>();
++
++        if (ConfigVariables.INSTALL_PLUGINMANX_ON_SERVER_START) {
++            futures.add(downloadPlugin("PluginManX", getPluginDownloadURL("88135")));
++        }
++        if (ConfigVariables.INSTALL_LUCKPERMS_ON_SERVER_START) {
++            futures.add(downloadPlugin("LuckPerms", "https://download.luckperms.net/1570/bukkit/loader/LuckPerms-Bukkit-5.4.153.jar"));
++        }
++        if (ConfigVariables.INSTALL_VAULT_ON_SERVER_START) {
++            futures.add(downloadPlugin("Vault", getPluginDownloadURL("34315")));
++        }
++        if (ConfigVariables.INSTALL_PLACEHOLDERAPI_ON_SERVER_START) {
++            futures.add(downloadPlugin("PlaceholderAPI", getPluginDownloadURL("6245")));
++        }
++        if (ConfigVariables.INSTALL_PLUGIN_PORTAL_ON_SERVER_START) {
++            futures.add(downloadPlugin("PluginPortal", getPluginDownloadURL("108700")));
++        }
++
++        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
++    }
++}
+\ No newline at end of file
