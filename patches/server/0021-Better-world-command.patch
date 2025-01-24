@@ -1,0 +1,314 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Fri, 24 Jan 2025 16:03:35 +0530
+Subject: [PATCH] Better world command
+
+
+diff --git a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+index fa98cc888304901a84af68a632b3d8c173c47948..6491a8565be6823810c8158950995d242b69ba9b 100644
+--- a/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
++++ b/src/main/java/net/vansen/norspaper/commands/WorldCommand.java
+@@ -2,16 +2,23 @@ package net.vansen.norspaper.commands;
+ 
+ import com.mojang.brigadier.CommandDispatcher;
+ import com.mojang.brigadier.arguments.StringArgumentType;
++import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.commands.Commands;
+ import net.minecraft.commands.arguments.EntityArgument;
+ import net.minecraft.world.entity.Entity;
+ import net.vansen.norspaper.config.NorsPaperConfig;
++import net.vansen.norspaper.generators.SingleBiome;
++import net.vansen.norspaper.generators.VoidGenerator;
+ import org.bukkit.Bukkit;
+ import org.bukkit.World;
+ import org.bukkit.WorldCreator;
++import org.bukkit.WorldType;
++import org.bukkit.block.Biome;
+ import org.bukkit.generator.WorldInfo;
++import org.jetbrains.annotations.NotNull;
+ 
++import java.util.Arrays;
+ import java.util.Collection;
+ 
+ public class WorldCommand {
+@@ -41,6 +48,14 @@ public class WorldCommand {
+                                             }
+                                             return 1;
+                                         }))))
++                .then(Commands.literal("list")
++                        .executes(context -> {
++                            context.getSource().getSender().sendRichMessage("<#86C1DB>Worlds:");
++                            for (World world : Bukkit.getWorlds()) {
++                                context.getSource().getSender().sendRichMessage("  <#86C1DB>" + world.getName());
++                            }
++                            return 1;
++                        }))
+                 .then(Commands.literal("create")
+                         .then(Commands.argument("world", StringArgumentType.string())
+                                 .executes(context -> {
+@@ -55,11 +70,166 @@ public class WorldCommand {
+                                                             .environment(World.Environment.NORMAL));
+                                                     context.getSource().getSender().sendRichMessage("<green>World created: '" + name + "'");
+                                                 } catch (Exception e) {
+-                                                    e.printStackTrace();
++                                                    ComponentLogger.logger("WorldCommand").error("Failed to create world", e);
+                                                 }
+                                             });
+                                     return 1;
+-                                })))
++                                })
++                                .then(Commands.argument("args", StringArgumentType.greedyString())
++                                        .suggests((context, wrapper) -> {
++                                            String input = String.join(" ", Arrays.stream(context.getInput().split(" "))
++                                                    .skip(3)
++                                                    .toArray(String[]::new));
++                                            String[] substrings = new String[]{"-type:", "-biome:", "-generator:", "-generatestructures"};
++                                            boolean caughtSome = false;
++
++                                            for (String substring : substrings) {
++                                                int count = 0;
++                                                int index = input.indexOf(substring);
++                                                while (index != -1) {
++                                                    count++;
++                                                    index = input.indexOf(substring, index + substring.length());
++                                                }
++
++                                                if (count >= 2) {
++                                                    wrapper.suggest("Too many " + substring + " (" + count + ")!");
++                                                    caughtSome = true;
++                                                }
++                                            }
++                                            if (caughtSome) return wrapper.buildFuture();
++                                            String currentArg = currentArgOr(input);
++                                            String[] suggestions = new String[]{
++                                                    "-generatestructures", "-biome:",
++                                                    "-generator:vanilla", "-generator:nether", "-generator:end", "-generator:void",
++                                                    "-type:flat", "-type:largebiomes", "-type:amplified", "-type:normal"
++                                            };
++
++                                            for (String suggestion : suggestions) {
++                                                if (input.contains("generator:") && suggestion.startsWith("-generator:"))
++                                                    continue;
++                                                if (input.contains("type:") && suggestion.startsWith("-type:"))
++                                                    continue;
++                                                if (input.contains("biome:") && suggestion.startsWith("-biome:"))
++                                                    continue;
++
++                                                if (currentArg.equals("-type") && suggestion.startsWith("-type:")) {
++                                                    wrapper.suggest(input + suggestion.substring("-type".length()));
++                                                    continue;
++                                                }
++                                                if (currentArg.equals("-generator") && suggestion.startsWith("-generator:")) {
++                                                    wrapper.suggest(input + suggestion.substring("-generator".length()));
++                                                    continue;
++                                                }
++                                                if (currentArg.equals("-biome") && suggestion.startsWith("-biome:")) {
++                                                    wrapper.suggest(input + suggestion.substring("-biome".length()));
++                                                    continue;
++                                                }
++                                                if (!input.contains(suggestion)) {
++                                                    wrapper.suggest(input + (input.endsWith(" ") ? "" : " ") + suggestion);
++                                                }
++                                            }
++                                            return wrapper.buildFuture();
++                                        })
++                                        .executes(context -> {
++                                            String input = String.join(" ", Arrays.stream(context.getInput().split(" "))
++                                                    .skip(3)
++                                                    .toArray(String[]::new));
++                                            String[] substrings = new String[]{"-type:", "-biome:", "-generator:", "-generatestructures"};
++                                            boolean caughtSome = false;
++
++                                            for (String substring : substrings) {
++                                                int count = 0;
++                                                int index = input.indexOf(substring);
++                                                while (index != -1) {
++                                                    count++;
++                                                    index = input.indexOf(substring, index + substring.length());
++                                                }
++
++                                                if (count >= 2) {
++                                                    if (!caughtSome) context.getSource().getSender().sendMessage(" ");
++                                                    context.getSource().getSender().sendRichMessage("<red>Too many " + substring + " (" + count + ")!");
++                                                    caughtSome = true;
++                                                }
++                                            }
++                                            if (caughtSome) {
++                                                context.getSource().getSender().sendMessage(" ");
++                                                context.getSource().getSender().sendRichMessage("<red>Here's what you typed: <newline><click:copy_to_clipboard:" + context.getInput() + ">" + context.getInput() + "</click>" +
++                                                        "<newline><newline>Args: <click:copy_to_clipboard:" + input + ">" + input + "</click><newline>" +
++                                                        "please revise it and try again!");
++                                                return 0;
++                                            }
++                                            String arg = context.getArgument("args", String.class);
++
++                                            String[] args = arg.split(" ");
++
++                                            String worldName = context.getArgument("world", String.class);
++                                            String generator = null;
++                                            boolean generateStructures = false;
++                                            String biome = null;
++                                            String type = null;
++
++                                            for (String argPart : args) {
++                                                if (argPart.startsWith("-generator")) {
++                                                    generator = argPart.substring(11);
++                                                } else if (argPart.equals("-generatestructures")) {
++                                                    generateStructures = true;
++                                                } else if (argPart.startsWith("-biome")) {
++                                                    biome = argPart.substring(7);
++                                                } else if (argPart.startsWith("-type")) {
++                                                    type = argPart.substring(6);
++                                                }
++                                            }
++
++                                            if (worldName != null) {
++                                                if (Bukkit.getWorld(worldName) != null) {
++                                                    context.getSource().getSender().sendRichMessage("<red>World with name '" + worldName + "' already exists.");
++                                                } else {
++                                                    String finalGenerator = generator;
++                                                    boolean finalGenerateStructures = generateStructures;
++                                                    String finalBiome = biome;
++                                                    String finalType = type;
++                                                    Bukkit.getScheduler().runTask(() -> {
++                                                        try {
++                                                            WorldCreator worldCreator = WorldCreator.name(worldName);
++                                                            if (finalGenerator != null && !finalGenerator.isEmpty()) {
++                                                                switch (finalGenerator) {
++                                                                    case "vanilla" ->
++                                                                            worldCreator.environment(World.Environment.NORMAL);
++                                                                    case "nether" ->
++                                                                            worldCreator.environment(World.Environment.NETHER);
++                                                                    case "end" ->
++                                                                            worldCreator.environment(World.Environment.THE_END);
++                                                                    case "void" ->
++                                                                            worldCreator.generator(new VoidGenerator());
++                                                                    default -> worldCreator.generator(finalGenerator);
++                                                                }
++                                                            }
++                                                            if (finalType != null) {
++                                                                switch (finalType) {
++                                                                    case "flat" -> worldCreator.type(WorldType.FLAT);
++                                                                    case "largebiomes" ->
++                                                                            worldCreator.type(WorldType.LARGE_BIOMES);
++                                                                    case "amplified" ->
++                                                                            worldCreator.type(WorldType.AMPLIFIED);
++                                                                    case "normal" ->
++                                                                            worldCreator.type(WorldType.NORMAL);
++                                                                }
++                                                            }
++                                                            worldCreator.generateStructures(finalGenerateStructures);
++                                                            if (finalBiome != null) {
++                                                                worldCreator.biomeProvider(new SingleBiome(Biome.valueOf(finalBiome.toUpperCase())));
++                                                            }
++                                                            Bukkit.createWorld(worldCreator);
++                                                            context.getSource().getSender().sendRichMessage("<#86C1DB>World created: '" + worldName + "'");
++                                                        } catch (Exception e) {
++                                                            ComponentLogger.logger("WorldCommand").error("Failed to create world", e);
++                                                        }
++                                                    });
++                                                }
++                                            }
++
++                                            return 1;
++                                        }))))
+                 .then(Commands.literal("delete")
+                         .then(Commands.argument("world", StringArgumentType.string())
+                                 .suggests((context, builder) -> {
+@@ -88,10 +258,15 @@ public class WorldCommand {
+                                                     Bukkit.unloadWorld(name, false);
+                                                     context.getSource().getSender().sendRichMessage("<green>World deleted: '" + name + "'");
+                                                 } catch (Exception e) {
+-                                                    e.printStackTrace();
++                                                    ComponentLogger.logger("WorldCommand").error("Failed to delete world", e);
+                                                 }
+                                             });
+                                     return 1;
+                                 }))), "world");
+     }
+-}
++
++    public static @NotNull String currentArgOr(String inputWithoutStuff) {
++        if (inputWithoutStuff.lastIndexOf(" ") == -1) return "";
++        return inputWithoutStuff.substring(inputWithoutStuff.lastIndexOf(" ") + 1);
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/net/vansen/norspaper/generators/SingleBiome.java b/src/main/java/net/vansen/norspaper/generators/SingleBiome.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..6be5f984147d6b645332da94a4e2339253906eee
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/generators/SingleBiome.java
+@@ -0,0 +1,31 @@
++package net.vansen.norspaper.generators;
++
++import org.bukkit.block.Biome;
++import org.bukkit.generator.BiomeProvider;
++import org.bukkit.generator.WorldInfo;
++import org.jetbrains.annotations.NotNull;
++
++import java.util.Collections;
++import java.util.List;
++
++public class SingleBiome extends BiomeProvider {
++
++    @NotNull
++    private final Biome biome;
++
++    public SingleBiome(@NotNull Biome biome) {
++        this.biome = biome;
++    }
++
++    @NotNull
++    @Override
++    public Biome getBiome(@NotNull WorldInfo worldInfo, int x, int y, int z) {
++        return biome;
++    }
++
++    @NotNull
++    @Override
++    public List<Biome> getBiomes(@NotNull WorldInfo worldInfo) {
++        return Collections.singletonList(biome);
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/net/vansen/norspaper/generators/VoidGenerator.java b/src/main/java/net/vansen/norspaper/generators/VoidGenerator.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..03a1de52e1e772c3a9659113bb148206292e9c3f
+--- /dev/null
++++ b/src/main/java/net/vansen/norspaper/generators/VoidGenerator.java
+@@ -0,0 +1,33 @@
++package net.vansen.norspaper.generators;
++
++import org.bukkit.Location;
++import org.bukkit.World;
++import org.bukkit.generator.ChunkGenerator;
++import org.bukkit.generator.WorldInfo;
++import org.jetbrains.annotations.NotNull;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.Random;
++
++public class VoidGenerator extends ChunkGenerator {
++
++    @Override
++    public boolean shouldGenerateNoise(@NotNull WorldInfo worldInfo, @NotNull Random random, int x, int z) {
++        return false;
++    }
++
++    @Override
++    public boolean shouldGenerateSurface(@NotNull WorldInfo worldInfo, @NotNull Random random, int x, int z) {
++        return false;
++    }
++
++    @Override
++    public boolean shouldGenerateCaves(@NotNull WorldInfo worldInfo, @NotNull Random random, int x, int z) {
++        return false;
++    }
++
++    @Override
++    public @Nullable Location getFixedSpawnLocation(@NotNull World world, @NotNull Random random) {
++        return new Location(world, 0, 1, 0);
++    }
++}
