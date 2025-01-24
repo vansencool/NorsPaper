@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Fri, 24 Jan 2025 19:48:27 +0530
+Subject: [PATCH] Fix self_plugins not working after checking a disabled plugin
+
+
+diff --git a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+index e6144becc7ed034ef024aebf7e6fe4dbdd7a7497..c84bd5fa0579e9daf45bc817fbdac9627fc98e32 100644
+--- a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+@@ -85,7 +85,7 @@ public class NorsPaperConfig {
+         if (config.hasPath("plugins.self_plugins")) {
+             for (Config config : config.getConfigList("plugins.self_plugins")) {
+                 String pluginName = config.getString("name");
+-                if (!config.getBoolean("enabled")) return;
++                if (!config.getBoolean("enabled")) continue;
+                 if (config.hasPath("id")) {
+                     String pluginId = config.getString("id");
+                     PluginDownloader.downloadPlugin(pluginName, PluginDownloader.getPluginDownloadURL(pluginId)).join();
