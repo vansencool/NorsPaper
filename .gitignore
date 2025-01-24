@@ -58,3 +58,4 @@ NorsPaper-Server
 paper-api-generator
 *.jar
 test-plugin.settings.gradle.kts
+.qodo
