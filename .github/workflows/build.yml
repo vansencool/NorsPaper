@@ -45,4 +45,4 @@ jobs:
           automatic_release_tag: "ver-1.21.1"
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           files: "./norspaper-1.21.1.jar"
-          prerelease: true
+          prerelease: false
