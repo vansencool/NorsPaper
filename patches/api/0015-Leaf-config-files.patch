@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Dreeam <61569423+Dreeam-qwq@users.noreply.github.com>
+Date: Thu, 11 Aug 2022 04:13:27 +0800
+Subject: [PATCH] Leaf config files
+
+
+diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
+index 03fdaea593a6a300ab92191c36a24ba18bd94b44..b1c34f4d44b420930e79dd440328e522b669601f 100644
+--- a/src/main/java/org/bukkit/Server.java
++++ b/src/main/java/org/bukkit/Server.java
+@@ -2318,6 +2318,14 @@ public interface Server extends PluginMessageRecipient, net.kyori.adventure.audi
+ 
+         // Paper end
+ 
++        // Leaf start
++        @NotNull
++        public org.bukkit.configuration.file.YamlConfiguration getLeafConfig()
++        {
++            throw new UnsupportedOperationException("Not supported yet.");
++        }
++        // Leaf end
++
+         /**
+          * Sends the component to the player
+          *
