@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Sun, 2 Feb 2025 20:19:04 +0530
+Subject: [PATCH] Fix viabackwards and disable via plugins by default
+
+
+diff --git a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+index 8924e20f00ee6ce2abef8f2795f9edf9bb58c180..22a000b765f2a8517c27a99e5cc3de386499b05c 100644
+--- a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+@@ -23,9 +23,9 @@ public class DefaultConfig {
+                 install_vault_on_server_start = false // Install vault on server start
+                 install_placeholderapi_on_server_start = false // Install placeholderapi on server start
+                 install_plugin_portal_on_server_start = false // Install plugin portal on server start
+-                install_via_version_on_server_start = true // Install plugins via version on server start
+-                install_via_backwards_on_server_start = true // Install plugins via backwards on server start
+-                install_via_rewind_on_server_start = true // Install plugins via rewind on server start
++                install_via_version_on_server_start = false // Install plugins via version on server start
++                install_via_backwards_on_server_start = false // Install plugins via backwards on server start
++                install_via_rewind_on_server_start = false // Install plugins via rewind on server start
+                 self_plugins = [ // List of custom plugins to install, please only add id or url, not both...
+                   {
+                     enabled = false,
+diff --git a/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java b/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
+index c1d6529e76c0284308f0eda5019970bef10b214a..47b85040e2ba19c7bd9b916c334af8166415260e 100644
+--- a/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
++++ b/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
+@@ -70,6 +70,10 @@ public class PluginDownloader {
+                 .thenAccept(response -> {
+                     if (response.statusCode() == 200) {
+                         try {
++                            if (!destination.getParentFile().exists() && !destination.getParentFile().mkdirs()) {
++                                logger.error("Failed to create parent directory for file '{}'", destination.getAbsolutePath());
++                                return;
++                            }
+                             Files.write(destination.toPath(), response.body());
+                             logger.info("Downloaded file to '{}'.", destination.getAbsolutePath());
+                         } catch (IOException e) {
+@@ -136,7 +140,7 @@ public class PluginDownloader {
+             futures.add(downloadPlugin("ViaVersion", getPluginDownloadURL("19254")));
+         }
+         if (ConfigVariables.INSTALL_VIA_BACKWARDS_ON_SERVER_START) {
+-            futures.add(downloadPlugin("ViaBackwards", getPluginDownloadURL("27448")));
++            futures.add(downloadPlugin("ViaBackwards", "https://hangarcdn.papermc.io/plugins/ViaVersion/ViaBackwards/versions/5.2.1/PAPER/ViaBackwards-5.2.1.jar"));
+         }
+         if (ConfigVariables.INSTALL_VIA_REWIND_ON_SERVER_START) {
+             futures.add(downloadPlugin("ViaRewind", getPluginDownloadURL("52109")));
