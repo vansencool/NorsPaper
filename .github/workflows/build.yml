@@ -37,6 +37,11 @@ jobs:
           name: NorsPaper 1.21.1
           path: ./norspaper-1.21.1.jar
 
+      - name: Remove Existing Tag (if any)
+        run: |
+          git tag -d ver-1.21.1 || true
+          git push origin :refs/tags/ver-1.21.1 || true
+
       - name: Create GitHub Release
         if: github.event_name != 'pull_request'
         uses: ncipollo/release-action@v1
