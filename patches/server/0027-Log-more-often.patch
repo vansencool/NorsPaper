@@ -1,0 +1,263 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Sun, 2 Feb 2025 20:42:33 +0530
+Subject: [PATCH] Log more often
+
+
+diff --git a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+index 86462d3eff74f373820ccdbb162978d1d4a6d9d6..8f5d3b5530f090a8713131d7750dc18c6899bbdd 100644
+--- a/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
++++ b/src/main/java/net/minecraft/server/dedicated/DedicatedServer.java
+@@ -1,38 +1,12 @@
+ package net.minecraft.server.dedicated;
+ 
+-import com.google.common.collect.Lists;
+ import com.mojang.authlib.GameProfile;
+ import com.mojang.datafixers.DataFixer;
+ import com.mojang.logging.LogUtils;
+-import java.io.BufferedReader;
+-import java.io.BufferedWriter;
+-import java.io.IOException;
+-import java.io.InputStreamReader;
+-import java.net.InetAddress;
+-import java.net.Proxy;
+-import java.net.URI;
+-import java.nio.charset.StandardCharsets;
+-import java.nio.file.Files;
+-import java.nio.file.Path;
+-import java.util.Collections;
+-import java.util.List;
+-import java.util.Locale;
+-import java.util.Optional;
+-import java.util.function.BooleanSupplier;
+-import javax.annotation.Nullable;
+-import net.minecraft.DefaultUncaughtExceptionHandler;
+-import net.minecraft.DefaultUncaughtExceptionHandlerWithName;
+-import net.minecraft.SharedConstants;
+-import net.minecraft.SystemReport;
+-import net.minecraft.Util;
++import net.minecraft.*;
+ import net.minecraft.commands.CommandSourceStack;
+ import net.minecraft.core.BlockPos;
+-import net.minecraft.server.ConsoleInput;
+-import net.minecraft.server.MinecraftServer;
+-import net.minecraft.server.ServerInterface;
+-import net.minecraft.server.ServerLinks;
+-import net.minecraft.server.Services;
+-import net.minecraft.server.WorldStem;
++import net.minecraft.server.*;
+ import net.minecraft.server.gui.MinecraftServerGui;
+ import net.minecraft.server.level.ServerLevel;
+ import net.minecraft.server.level.ServerPlayer;
+@@ -46,30 +20,34 @@ import net.minecraft.server.rcon.RconConsoleSource;
+ import net.minecraft.server.rcon.thread.QueryThreadGs4;
+ import net.minecraft.server.rcon.thread.RconThread;
+ import net.minecraft.util.Mth;
+-import net.minecraft.util.debugchart.DebugSampleSubscriptionTracker;
+-import net.minecraft.util.debugchart.RemoteDebugSampleType;
+-import net.minecraft.util.debugchart.RemoteSampleLogger;
+-import net.minecraft.util.debugchart.SampleLogger;
+-import net.minecraft.util.debugchart.TpsDebugDimensions;
++import net.minecraft.util.debugchart.*;
+ import net.minecraft.util.monitoring.jmx.MinecraftServerStatistics;
+ import net.minecraft.world.entity.player.Player;
+ import net.minecraft.world.level.GameRules;
+ import net.minecraft.world.level.GameType;
+ import net.minecraft.world.level.block.entity.SkullBlockEntity;
+ import net.minecraft.world.level.storage.LevelStorageSource;
+-import org.slf4j.Logger;
+-
+-// CraftBukkit start
+-import net.minecraft.server.WorldLoader;
+ import org.apache.logging.log4j.Level;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.io.IoBuilder;
+ import org.bukkit.command.CommandSender;
+-import org.bukkit.craftbukkit.util.TerminalCompletionHandler;
+-import org.bukkit.craftbukkit.util.TerminalConsoleWriterThread;
+-import org.bukkit.event.server.ServerCommandEvent;
+-import org.bukkit.craftbukkit.util.Waitable; // Paper
++import org.bukkit.craftbukkit.util.Waitable;
+ import org.bukkit.event.server.RemoteServerCommandEvent;
++import org.bukkit.event.server.ServerCommandEvent;
++import org.slf4j.Logger;
++
++import javax.annotation.Nullable;
++import java.io.BufferedWriter;
++import java.io.IOException;
++import java.net.InetAddress;
++import java.net.Proxy;
++import java.net.URI;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.List;
++import java.util.Locale;
++import java.util.Optional;
++import java.util.function.BooleanSupplier;
+ // CraftBukkit end
+ 
+ public class DedicatedServer extends MinecraftServer implements ServerInterface {
+@@ -303,7 +281,7 @@ public class DedicatedServer extends MinecraftServer implements ServerInterface
+         } catch (IOException ioexception) {
+             DedicatedServer.LOGGER.warn("**** FAILED TO BIND TO PORT!");
+             DedicatedServer.LOGGER.warn("The exception was: {}", ioexception.toString());
+-            DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?");
++            DedicatedServer.LOGGER.warn("Perhaps a server is already running on that port?, maybe try using a different port?"); // NorsPaper
+             if (true) throw new IllegalStateException("Failed to bind to port", ioexception); // Paper - Propagate failed to bind to port error
+             return false;
+         }
+diff --git a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+index 22a000b765f2a8517c27a99e5cc3de386499b05c..89754c350712d8bdbbd89e29441e93b4cb7e8e0a 100644
+--- a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+@@ -39,5 +39,8 @@ public class DefaultConfig {
+                   }
+                 ]
+             }
++            startup {
++                log_more_often = false // Log more often, e.g. for debugging
++            }
+             """;
+ }
+diff --git a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+index 4e5a82ad1b70b02784842af8ad1043067d8607d0..38d8e3b20ae275b7f891a53d54dbc26e3a064692 100644
+--- a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+@@ -60,49 +60,70 @@ public class NorsPaperConfig {
+     }
+ 
+     public static void setVariables() {
++        long start = System.currentTimeMillis();
+         loadConfig();
++        if (config.hasPath("startup.log_more_often")) {
++            ConfigVariables.LOG_MORE_OFTEN = config.getBoolean("startup.log_more_often");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Logging more often is enabled");
++        }
+         if (config.hasPath("joins.send_client_brand_message_to_ops_on_player_join")) {
+             ConfigVariables.ENABLE_BRANDING_MESSAGE = config.getBoolean("joins.send_client_brand_message_to_ops_on_player_join");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Send client brand message to ops on player join is {}", ConfigVariables.ENABLE_BRANDING_MESSAGE);
+         }
+         if (config.hasPath("joins.brand_message")) {
+             ConfigVariables.BRAND_MESSAGE = config.getString("joins.brand_message");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Brand message is {}", ConfigVariables.BRAND_MESSAGE);
+         }
+         if (config.hasPath("plugins.install_pluginmanx_on_server_start")) {
+             ConfigVariables.INSTALL_PLUGINMANX_ON_SERVER_START = config.getBoolean("plugins.install_pluginmanx_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install pluginmanx on server start is {}", ConfigVariables.INSTALL_PLUGINMANX_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.install_luckperms_on_server_start")) {
+             ConfigVariables.INSTALL_LUCKPERMS_ON_SERVER_START = config.getBoolean("plugins.install_luckperms_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install luckperms on server start is {}", ConfigVariables.INSTALL_LUCKPERMS_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.install_vault_on_server_start")) {
+             ConfigVariables.INSTALL_VAULT_ON_SERVER_START = config.getBoolean("plugins.install_vault_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install vault on server start is {}", ConfigVariables.INSTALL_VAULT_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.install_placeholderapi_on_server_start")) {
+             ConfigVariables.INSTALL_PLACEHOLDERAPI_ON_SERVER_START = config.getBoolean("plugins.install_placeholderapi_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install placeholderapi on server start is {}", ConfigVariables.INSTALL_PLACEHOLDERAPI_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.install_plugin_portal_on_server_start")) {
+             ConfigVariables.INSTALL_PLUGIN_PORTAL_ON_SERVER_START = config.getBoolean("plugins.install_plugin_portal_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install plugin portal on server start is {}", ConfigVariables.INSTALL_PLUGIN_PORTAL_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.install_via_version_on_server_start")) {
+             ConfigVariables.INSTALL_VIA_VERSION_ON_SERVER_START = config.getBoolean("plugins.install_via_version_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install via version on server start is {}", ConfigVariables.INSTALL_VIA_VERSION_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.install_via_backwards_on_server_start")) {
+             ConfigVariables.INSTALL_VIA_BACKWARDS_ON_SERVER_START = config.getBoolean("plugins.install_via_backwards_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install via backwards on server start is {}", ConfigVariables.INSTALL_VIA_BACKWARDS_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.install_via_rewind_on_server_start")) {
+             ConfigVariables.INSTALL_VIA_REWIND_ON_SERVER_START = config.getBoolean("plugins.install_via_rewind_on_server_start");
++            if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Install via rewind on server start is {}", ConfigVariables.INSTALL_VIA_REWIND_ON_SERVER_START);
+         }
+         if (config.hasPath("plugins.self_plugins")) {
+             for (Config config : config.getConfigList("plugins.self_plugins")) {
+                 String pluginName = config.getString("name");
+-                if (!config.getBoolean("enabled")) continue;
++                if (!config.getBoolean("enabled")) {
++                    if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Skipping disabled plugin {}", pluginName);
++                    continue;
++                }
+                 if (config.hasPath("id")) {
+                     String pluginId = config.getString("id");
++                    if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Downloading plugin {} with id {}", pluginName, pluginId);
+                     PluginDownloader.downloadPlugin(pluginName, PluginDownloader.getPluginDownloadURL(pluginId)).join();
+                 } else {
++                    if (ConfigVariables.LOG_MORE_OFTEN) LOGGER.info("Downloading plugin {} with url {}", pluginName, config.getString("url"));
+                     PluginDownloader.downloadPlugin(pluginName, config.getString("url")).join();
+                 }
+             }
+         }
++        if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("NorsPaper").info("Loaded config and set variables in {}ms", System.currentTimeMillis() - start);
+     }
+ 
+     /**
+diff --git a/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+index ea2f2d3ab0c5ed28b5d3304092ea11a5816d4532..f8a738d3f29abd80fa5acc47b479ce105f1a1d16 100644
+--- a/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
++++ b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+@@ -13,4 +13,5 @@ public class ConfigVariables {
+     public static boolean INSTALL_VIA_VERSION_ON_SERVER_START = true;
+     public static boolean INSTALL_VIA_BACKWARDS_ON_SERVER_START = true;
+     public static boolean INSTALL_VIA_REWIND_ON_SERVER_START = true;
++    public static boolean LOG_MORE_OFTEN = true;
+ }
+diff --git a/src/main/java/net/vansen/norspaper/worlds/WorldStorage.java b/src/main/java/net/vansen/norspaper/worlds/WorldStorage.java
+index 2c049ed9e0b4330487a7ab0c2f351356d7602cdf..8c2ee6cd671eae7a1fdb1af88be1cb944b16ed49 100644
+--- a/src/main/java/net/vansen/norspaper/worlds/WorldStorage.java
++++ b/src/main/java/net/vansen/norspaper/worlds/WorldStorage.java
+@@ -1,6 +1,7 @@
+ package net.vansen.norspaper.worlds;
+ 
+ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
++import net.vansen.norspaper.config.variables.ConfigVariables;
+ 
+ import java.io.File;
+ import java.io.FileWriter;
+@@ -13,14 +14,17 @@ public class WorldStorage {
+     private static final String WORLD_STORAGE_FILE = "norspaper/worlds.dat";
+ 
+     public static void storeWorld(String worldName) {
++        if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("WorldStorage").info("Storing world in storage {}", worldName);
+         try (FileWriter writer = new FileWriter(WORLD_STORAGE_FILE, true)) {
+             writer.write(worldName + "\n");
+         } catch (IOException e) {
+             ComponentLogger.logger("WorldStorage").error("Failed to store world", e);
+         }
++        if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("WorldStorage").info("Stored world in storage {} (if there are any failed logs, it means that the world was not stored)", worldName);
+     }
+ 
+     public static void deleteWorld(String worldName) {
++        if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("WorldStorage").info("Deleting world from storage {}", worldName);
+         File file = new File(WORLD_STORAGE_FILE);
+         List<String> worlds = new ArrayList<>();
+ 
+@@ -42,11 +46,15 @@ public class WorldStorage {
+         } catch (IOException e) {
+             ComponentLogger.logger("WorldStorage").error("Failed to delete world", e);
+         }
++
++        if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("WorldStorage").info("Deleted world from storage {} (if there are any failed logs, it means that the world was not deleted)", worldName);
+     }
+ 
+     public static List<String> loadWorlds() {
++        if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("WorldStorage").info("Loading worlds");
+         List<String> worlds = new ArrayList<>();
+         if (!new File(WORLD_STORAGE_FILE).exists()) {
++            if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("WorldStorage").info("No worlds found, returning empty list");
+             return worlds;
+         }
+ 
+@@ -58,6 +66,8 @@ public class WorldStorage {
+             ComponentLogger.logger("WorldStorage").error("Failed to load worlds", e);
+         }
+ 
++        if (ConfigVariables.LOG_MORE_OFTEN) ComponentLogger.logger("WorldStorage").info("Loaded {} worlds", worlds.size());
++
+         return worlds;
+     }
+ }
+\ No newline at end of file
