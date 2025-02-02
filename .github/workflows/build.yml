@@ -37,12 +37,12 @@ jobs:
           name: NorsPaper 1.21.1
           path: ./norspaper-1.21.1.jar
 
-      - name: Release NorsPaper
+      - name: Create GitHub Release
         if: github.event_name != 'pull_request'
-        uses: marvinpinto/action-automatic-releases@master
+        uses: ncipollo/release-action@v1
         with:
-          title: "NorsPaper 1.21.1"
-          automatic_release_tag: "ver-1.21.1"
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          files: "./norspaper-1.21.1.jar"
+          artifacts: norspaper-1.21.1.jar
+          tag: "ver-1.21.1"
+          name: "NorsPaper 1.21.1"
           prerelease: false
+          token: "${{ secrets.GITHUB_TOKEN }}"
