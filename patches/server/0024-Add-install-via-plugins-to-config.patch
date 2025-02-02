@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: vansencool <vansencool@gmail.com>
+Date: Sun, 2 Feb 2025 17:50:49 +0530
+Subject: [PATCH] Add install via plugins to config
+
+
+diff --git a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+index 8092e9a3a3eb78323991702a6157e5ca258b06e9..8924e20f00ee6ce2abef8f2795f9edf9bb58c180 100644
+--- a/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/DefaultConfig.java
+@@ -23,6 +23,9 @@ public class DefaultConfig {
+                 install_vault_on_server_start = false // Install vault on server start
+                 install_placeholderapi_on_server_start = false // Install placeholderapi on server start
+                 install_plugin_portal_on_server_start = false // Install plugin portal on server start
++                install_via_version_on_server_start = true // Install plugins via version on server start
++                install_via_backwards_on_server_start = true // Install plugins via backwards on server start
++                install_via_rewind_on_server_start = true // Install plugins via rewind on server start
+                 self_plugins = [ // List of custom plugins to install, please only add id or url, not both...
+                   {
+                     enabled = false,
+diff --git a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+index c84bd5fa0579e9daf45bc817fbdac9627fc98e32..4e5a82ad1b70b02784842af8ad1043067d8607d0 100644
+--- a/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
++++ b/src/main/java/net/vansen/norspaper/config/NorsPaperConfig.java
+@@ -82,6 +82,15 @@ public class NorsPaperConfig {
+         if (config.hasPath("plugins.install_plugin_portal_on_server_start")) {
+             ConfigVariables.INSTALL_PLUGIN_PORTAL_ON_SERVER_START = config.getBoolean("plugins.install_plugin_portal_on_server_start");
+         }
++        if (config.hasPath("plugins.install_via_version_on_server_start")) {
++            ConfigVariables.INSTALL_VIA_VERSION_ON_SERVER_START = config.getBoolean("plugins.install_via_version_on_server_start");
++        }
++        if (config.hasPath("plugins.install_via_backwards_on_server_start")) {
++            ConfigVariables.INSTALL_VIA_BACKWARDS_ON_SERVER_START = config.getBoolean("plugins.install_via_backwards_on_server_start");
++        }
++        if (config.hasPath("plugins.install_via_rewind_on_server_start")) {
++            ConfigVariables.INSTALL_VIA_REWIND_ON_SERVER_START = config.getBoolean("plugins.install_via_rewind_on_server_start");
++        }
+         if (config.hasPath("plugins.self_plugins")) {
+             for (Config config : config.getConfigList("plugins.self_plugins")) {
+                 String pluginName = config.getString("name");
+diff --git a/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+index 2e402e6c3f227426547309099fe4f971c03a58e6..ea2f2d3ab0c5ed28b5d3304092ea11a5816d4532 100644
+--- a/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
++++ b/src/main/java/net/vansen/norspaper/config/variables/ConfigVariables.java
+@@ -10,4 +10,7 @@ public class ConfigVariables {
+     public static boolean INSTALL_VAULT_ON_SERVER_START = false;
+     public static boolean INSTALL_PLACEHOLDERAPI_ON_SERVER_START = false;
+     public static boolean INSTALL_PLUGIN_PORTAL_ON_SERVER_START = false;
++    public static boolean INSTALL_VIA_VERSION_ON_SERVER_START = true;
++    public static boolean INSTALL_VIA_BACKWARDS_ON_SERVER_START = true;
++    public static boolean INSTALL_VIA_REWIND_ON_SERVER_START = true;
+ }
+diff --git a/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java b/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
+index 56d1efd052c2b02aa2bbc177d992c99b81b0cb73..c1d6529e76c0284308f0eda5019970bef10b214a 100644
+--- a/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
++++ b/src/main/java/net/vansen/norspaper/plugin/PluginDownloader.java
+@@ -132,6 +132,15 @@ public class PluginDownloader {
+         if (ConfigVariables.INSTALL_PLUGIN_PORTAL_ON_SERVER_START) {
+             futures.add(downloadPlugin("PluginPortal", getPluginDownloadURL("108700")));
+         }
++        if (ConfigVariables.INSTALL_VIA_VERSION_ON_SERVER_START) {
++            futures.add(downloadPlugin("ViaVersion", getPluginDownloadURL("19254")));
++        }
++        if (ConfigVariables.INSTALL_VIA_BACKWARDS_ON_SERVER_START) {
++            futures.add(downloadPlugin("ViaBackwards", getPluginDownloadURL("27448")));
++        }
++        if (ConfigVariables.INSTALL_VIA_REWIND_ON_SERVER_START) {
++            futures.add(downloadPlugin("ViaRewind", getPluginDownloadURL("52109")));
++        }
+ 
+         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+     }
