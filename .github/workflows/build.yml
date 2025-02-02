@@ -39,6 +39,7 @@ jobs:
 
       - name: Remove Existing Tag (if any)
         run: |
+          git fetch --tags
           git tag -d ver-1.21.1 || true
           git push origin :refs/tags/ver-1.21.1 || true
 
